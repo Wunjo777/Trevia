@@ -1,4 +1,4 @@
-package com.example.trevia.ui.trip
+package com.example.trevia.ui.schedule
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,12 +18,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.trevia.R
 import com.example.trevia.utils.toDateString
 import com.example.trevia.ui.utils.DateRangePickerModal
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddTripScreen(addTripViewModel: AddTripViewModel = viewModel())
 {
     val addTripUiState by remember { addTripViewModel.addTripUiState }
-
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,13 +89,19 @@ fun AddTripScreen(addTripViewModel: AddTripViewModel = viewModel())
         }
         // 行程时间
         TripDatePicker(
+            addTripViewModel = addTripViewModel,
             tripDateRange = addTripUiState.tripDateRange,
             onTripDateChange = {
                 addTripViewModel.updateAddTripUiState { copy(tripDateRange = it) }
             })
 
         Button(
-            onClick = {},
+            onClick = {
+                coroutineScope.launch {
+                    addTripViewModel.saveTrip()
+                    //navigateback()
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(dimensionResource(R.dimen.padding_medium))
@@ -105,6 +113,7 @@ fun AddTripScreen(addTripViewModel: AddTripViewModel = viewModel())
 
 @Composable
 fun TripDatePicker(
+    addTripViewModel: AddTripViewModel,
     tripDateRange: String,
     onTripDateChange: (String) -> Unit
 )
@@ -124,9 +133,10 @@ fun TripDatePicker(
             text = stringResource(R.string.date_label),
             style = MaterialTheme.typography.titleMedium
         )
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showDateRangePicker = true } // 点击 Box 弹出日期选择器
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showDateRangePicker = true } // 点击 Box 弹出日期选择器
         ) {
             OutlinedTextField(
                 value = tripDateRange,
@@ -159,16 +169,7 @@ fun TripDatePicker(
     {
         DateRangePickerModal(
             onDateRangeSelected = { range ->
-                val start = range.first
-                val end = range.second
-                // 转换成 yyyy-MM-dd 格式显示
-                val startStr = start?.toDateString() ?: ""
-                val endStr = end?.toDateString() ?: ""
-                val dateText = if (startStr.isNotEmpty() && endStr.isNotEmpty())
-                {
-                    "$startStr - $endStr"
-                }
-                else ""
+                val dateText = addTripViewModel.selectedDateRangeToString(range)
                 onTripDateChange(dateText)
                 showDateRangePicker = false
             },
