@@ -1,5 +1,6 @@
 package com.example.trevia.ui.schedule
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,12 +11,14 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.trevia.R
+import com.example.trevia.domain.schedule.usecase.AddTripResult
 import com.example.trevia.utils.toDateString
 import com.example.trevia.ui.utils.DateRangePickerModal
 import kotlinx.coroutines.coroutineScope
@@ -25,7 +28,7 @@ import kotlinx.coroutines.launch
 fun AddTripScreen(addTripViewModel: AddTripViewModel = viewModel())
 {
     val addTripUiState by remember { addTripViewModel.addTripUiState }
-    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -97,16 +100,46 @@ fun AddTripScreen(addTripViewModel: AddTripViewModel = viewModel())
 
         Button(
             onClick = {
-                coroutineScope.launch {
-                    addTripViewModel.saveTrip()
-                    //navigateback()
-                }
+                addTripViewModel.saveTrip()
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(dimensionResource(R.dimen.padding_medium))
         ) {
             Text(stringResource(R.string.add_trip_button))
+        }
+        LaunchedEffect(addTripUiState.saveTripResult) {
+            when (addTripUiState.saveTripResult)
+            {
+                is AddTripResult.Success       ->
+                {
+                    Toast.makeText(context, R.string.save_trip_success, Toast.LENGTH_SHORT).show()
+//                    navigateBack()
+                    addTripViewModel.clearSaveTripResult()
+                }
+
+                is AddTripResult.InvalidData   ->
+                {
+                    Toast.makeText(
+                        context,
+                        R.string.invalid_trip_data,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    addTripViewModel.clearSaveTripResult()
+                }
+
+                is AddTripResult.DatabaseError ->
+                {
+                    Toast.makeText(
+                        context,
+                        R.string.save_trip_failed,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    addTripViewModel.clearSaveTripResult()
+                }
+
+                null                           -> Unit
+            }
         }
     }
 }

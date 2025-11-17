@@ -1,23 +1,37 @@
 package com.example.trevia.domain.schedule.usecase
 
+import com.example.trevia.data.schedule.TripRepository
+import com.example.trevia.di.OfflineRepo
 import com.example.trevia.domain.schedule.model.TripModel
 import com.example.trevia.domain.schedule.model.isValid
+import com.example.trevia.domain.schedule.model.toTrip
+import javax.inject.Inject
+import com.example.trevia.R
 
-class AddTripUseCase()
+class AddTripUseCase @Inject constructor(
+    @OfflineRepo private val tripRepository: TripRepository
+)
 {
-    suspend operator fun invoke(trip: TripModel)
+    suspend operator fun invoke(tripModel: TripModel): AddTripResult
     {
-        try
+        return try
         {
-            if (!trip.isValid())
+            if (!tripModel.isValid())
             {
-                throw IllegalArgumentException("行程数据无效")
+                return AddTripResult.InvalidData
             }
-            // 插入行程到数据库
-        }
-        catch (e: IllegalArgumentException)
+            tripRepository.insertTrip(tripModel.toTrip())
+            AddTripResult.Success
+        } catch (e: Exception)
         {
-            throw e
+            AddTripResult.DatabaseError
         }
     }
+}
+
+sealed class AddTripResult
+{
+    object Success : AddTripResult()
+    object InvalidData : AddTripResult()
+    object DatabaseError : AddTripResult()
 }

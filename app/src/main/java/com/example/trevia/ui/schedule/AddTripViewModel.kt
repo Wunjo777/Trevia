@@ -3,11 +3,18 @@ package com.example.trevia.ui.schedule
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.trevia.domain.schedule.model.TripModel
+import com.example.trevia.domain.schedule.usecase.AddTripResult
+import com.example.trevia.domain.schedule.usecase.AddTripUseCase
 import com.example.trevia.utils.toDateString
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-class AddTripViewModel : ViewModel()
+@HiltViewModel
+class AddTripViewModel @Inject constructor(private val addTripUseCase: AddTripUseCase) : ViewModel()
 {
     private val _addTripUiState = mutableStateOf(AddTripUiState())
     val addTripUiState: State<AddTripUiState> = _addTripUiState
@@ -32,18 +39,27 @@ class AddTripViewModel : ViewModel()
         }
     }
 
-    suspend fun saveTrip()
+    fun saveTrip()
     {
-        val trip = addTripUiState.value.toTripModel()
-        // 调用usecase添加行程
-        println("trip saved!")
+        val tripModel = addTripUiState.value.toTripModel()
+        viewModelScope.launch {
+            val saveTripResult = addTripUseCase(tripModel)
+            updateAddTripUiState { copy(saveTripResult = saveTripResult) }
+        }
+    }
+
+    fun clearSaveTripResult()
+    {
+        updateAddTripUiState { copy(saveTripResult = null) }
     }
 }
+
 
 data class AddTripUiState(
     val tripName: String = "",
     val tripLocation: String = "",
     val tripDateRange: String = "",
+    val saveTripResult: AddTripResult?=null
 )
 
 fun AddTripUiState.toTripModel(): TripModel
@@ -54,6 +70,6 @@ fun AddTripUiState.toTripModel(): TripModel
         destination = tripLocation,
         startDate = LocalDate.parse(tripDateRange.split(" ~ ")[0]),
         endDate = LocalDate.parse(tripDateRange.split(" ~ ")[1]),
-        days = emptyList()
+        days = emptyList()//TODO: 实现添加天数
     )
 }

@@ -10,21 +10,4 @@ abstract class ScheduleDatabase : RoomDatabase()
 {
     abstract fun tripDao(): TripDao
 
-    companion object
-    {
-        @Volatile
-        private var Instance: ScheduleDatabase? = null
-
-        fun getDatabase(context: Context): ScheduleDatabase
-        {
-            return Instance ?: synchronized(this) {
-                Room.databaseBuilder(
-                    context,
-                    ScheduleDatabase::class.java,
-                    "schedule_database"
-                ).build()
-                    .also { Instance = it }
-            }
-        }
-    }
 }
