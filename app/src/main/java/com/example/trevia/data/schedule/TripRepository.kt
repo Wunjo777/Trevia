@@ -1,5 +1,8 @@
 package com.example.trevia.data.schedule
 
+import com.example.trevia.domain.schedule.model.TripModel
+import kotlinx.coroutines.flow.Flow
+
 interface TripRepository
 {
     suspend fun insertTrip(trip: Trip)
@@ -7,4 +10,6 @@ interface TripRepository
     suspend fun deleteTrip(trip: Trip)
 
     suspend fun updateTrip(trip: Trip)
+
+    fun getAllTripsStream(): Flow<List<TripModel>>
 }

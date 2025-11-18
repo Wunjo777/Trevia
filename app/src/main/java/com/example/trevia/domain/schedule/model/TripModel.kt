@@ -24,7 +24,7 @@ fun TripModel.isValid(): Boolean
 
 fun TripModel.toTrip(): Trip
 {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val formatter = DateTimeFormatter.ISO_LOCAL_DATE
     val startDateString = startDate.format(formatter)
     val endDateString = endDate.format(formatter)
     return Trip(

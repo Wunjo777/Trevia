@@ -3,7 +3,9 @@ package com.example.trevia.data.schedule
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TripDao
@@ -16,4 +18,7 @@ interface TripDao
 
     @Delete
     suspend fun delete(trip: Trip)
+
+    @Query("SELECT * from trips ORDER BY id ASC")
+    fun getAllTrips(): Flow<List<Trip>>
 }
