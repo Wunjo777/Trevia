@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 data class TripModel(
-    val id: Int,
+    val id: Int = -1,
     val name: String,
     val destination: String,
     val startDate: LocalDate,
@@ -28,7 +28,6 @@ fun TripModel.toTrip(): Trip
     val startDateString = startDate.format(formatter)
     val endDateString = endDate.format(formatter)
     return Trip(
-        id = id,
         name = name,
         destination = destination,
         startDate = startDateString,

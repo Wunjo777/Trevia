@@ -1,0 +1,22 @@
+package com.example.trevia.domain.schedule.usecase
+
+import com.example.trevia.data.schedule.TripRepository
+import com.example.trevia.di.OfflineRepo
+import jakarta.inject.Inject
+import java.lang.Exception
+
+class DeleteTripByIdUseCase @Inject constructor(
+    @OfflineRepo private val tripRepository: TripRepository
+)
+{
+    // 使用 Result 来封装删除结果
+    suspend operator fun invoke(tripId: Int)
+    {
+        try
+        {
+            tripRepository.deleteTripById(tripId)
+        } catch (e: Exception)
+        {
+        }
+    }
+}

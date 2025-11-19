@@ -2,35 +2,67 @@ package com.example.trevia.ui.schedule
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.trevia.R
 import com.example.trevia.domain.schedule.usecase.AddTripResult
-import com.example.trevia.utils.toDateString
 import com.example.trevia.ui.utils.DateRangePickerModal
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTripScreen(addTripViewModel: AddTripViewModel = hiltViewModel())
+fun AddTripScreen(navigateBack: () -> Unit, addTripViewModel: AddTripViewModel = hiltViewModel())
 {
     val addTripUiState by remember { addTripViewModel.addTripUiState }
     val context = LocalContext.current
-    Scaffold { innerPadding ->
+    Scaffold(topBar = {
+        // 添加 TopAppBar
+        TopAppBar(
+            title = { Text(text = stringResource(R.string.add_trip_title)) },  // 设置标题
+            navigationIcon = {
+                IconButton(onClick = { navigateBack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, // 使用返回箭头图标
+                        contentDescription = stringResource(R.string.navigate_back)
+                    )
+                }
+            }
+        )
+    }) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,7 +141,7 @@ fun AddTripScreen(addTripViewModel: AddTripViewModel = hiltViewModel())
                     .fillMaxWidth()
                     .padding(dimensionResource(R.dimen.padding_medium))
             ) {
-                Text(stringResource(R.string.add_trip_button))
+                Text(stringResource(R.string.save_trip_button))
             }
             LaunchedEffect(addTripUiState.saveTripResult) {
                 when (addTripUiState.saveTripResult)
@@ -118,7 +150,7 @@ fun AddTripScreen(addTripViewModel: AddTripViewModel = hiltViewModel())
                     {
                         Toast.makeText(context, R.string.save_trip_success, Toast.LENGTH_SHORT)
                             .show()
-//                    navigateBack()
+                        navigateBack()
                         addTripViewModel.clearSaveTripResult()
                     }
 
@@ -216,9 +248,9 @@ private fun TripDatePicker(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-fun AddTripScreenPreview()
-{
-    AddTripScreen()
-}
+//@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+//@Composable
+//fun AddTripScreenPreview()
+//{
+//    AddTripScreen()
+//}

@@ -15,6 +15,8 @@ class OfflineTripRepository @Inject constructor(
 
     override suspend fun updateTrip(trip: Trip) = tripDao.update(trip)
 
+    override suspend fun deleteTripById(tripId: Int) = tripDao.deleteTripById(tripId)
+
     override fun getAllTripsStream(): Flow<List<TripModel>>
     {
         return tripDao.getAllTrips().map { trips ->

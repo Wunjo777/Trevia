@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="attention">注意</string>
+    <string name="delete_question">确定要删除该项吗？</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string name="navigate_back">返回</string>
+</resources>

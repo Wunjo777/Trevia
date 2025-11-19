@@ -8,8 +8,12 @@
     <string name="choose_date_placeholder">选择日期</string>
     <string name="destination_search_icon">搜索图标</string>
     <string name="date_picker_icon">日期选择图标</string>
-    <string name="add_trip_button">添加行程</string>
+    <string name="save_trip_button">添加行程</string>
+    <string name="create_trip_button">创建行程</string>
     <string name="save_trip_success">行程添加成功</string>
     <string name="invalid_trip_data">行程数据无效</string>
     <string name="save_trip_failed">发生未知错误，保存行程失败</string>
+    <string name="days_until_trip">计划 %1$d 天后出发</string>
+    <string name="trip_days_count"> %1$d 天 %2$d 晚</string>
+    <string name="add_trip_title">添加行程</string>
 </resources>

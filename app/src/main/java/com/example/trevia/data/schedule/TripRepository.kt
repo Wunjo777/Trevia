@@ -11,5 +11,7 @@ interface TripRepository
 
     suspend fun updateTrip(trip: Trip)
 
+    suspend fun deleteTripById(tripId: Int)
+
     fun getAllTripsStream(): Flow<List<TripModel>>
 }
