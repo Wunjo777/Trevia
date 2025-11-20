@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 @Entity(tableName = "trips")
 data class Trip(
     @PrimaryKey(autoGenerate = true)
-    val id: Int=0,
+    val id: Long=0,
     val name: String,
     val destination: String,
     val startDate: String,
@@ -24,7 +24,6 @@ fun Trip.toTripModel(): TripModel
         name = this.name,
         destination = this.destination,
         startDate = LocalDate.parse(this.startDate, formatter),
-        endDate = LocalDate.parse(this.endDate, formatter),
-        days=emptyList()//TODO: add days
+        endDate = LocalDate.parse(this.endDate, formatter)
     )
 }

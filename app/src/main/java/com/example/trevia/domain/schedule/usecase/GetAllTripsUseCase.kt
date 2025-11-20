@@ -39,7 +39,7 @@ class GetAllTripsUseCase @Inject constructor(
                             tripDaysCount = ChronoUnit.DAYS.between(
                                 tripModel.startDate,
                                 tripModel.endDate
-                            ).toInt()
+                            ).toInt()+1
                         )
                     }
                 )

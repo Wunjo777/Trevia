@@ -9,7 +9,8 @@ import javax.inject.Inject
 import com.example.trevia.R
 
 class AddTripUseCase @Inject constructor(
-    @OfflineRepo private val tripRepository: TripRepository
+    @OfflineRepo private val tripRepository: TripRepository,
+    private val createDaysForTripUseCase: CreateDaysForTripUseCase
 )
 {
     suspend operator fun invoke(tripModel: TripModel): AddTripResult
@@ -20,7 +21,11 @@ class AddTripUseCase @Inject constructor(
             {
                 return AddTripResult.InvalidData
             }
-            tripRepository.insertTrip(tripModel.toTrip())
+            val trip = tripModel.toTrip()
+            // Insert the trip into the database
+            val tripId = tripRepository.insertTrip(trip)
+            // Create the days for the trip
+            createDaysForTripUseCase(tripModel.copy(id = tripId))
             AddTripResult.Success
         } catch (e: Exception)
         {

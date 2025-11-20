@@ -2,6 +2,7 @@ package com.example.trevia.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.trevia.data.schedule.DayDao
 import com.example.trevia.data.schedule.ScheduleDatabase
 import com.example.trevia.data.schedule.TripDao
 import dagger.Module
@@ -23,15 +24,22 @@ object DatabaseModule
     ): ScheduleDatabase
     {
         return Room.databaseBuilder(
-            context,
-            ScheduleDatabase::class.java,
-            "schedule_database"
-        ).build()
+                context,
+                ScheduleDatabase::class.java,
+                "schedule_database"
+            ).fallbackToDestructiveMigration(true).build()
     }
 
     @Provides//database线程安全，则Dao在room中也是线程安全的
     fun provideTripDao(db: ScheduleDatabase): TripDao
     {
         return db.tripDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDayDao(db: ScheduleDatabase): DayDao
+    {
+        return db.dayDao()
     }
 }

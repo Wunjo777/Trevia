@@ -5,12 +5,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 data class TripModel(
-    val id: Int = -1,
+    val id: Long = -1,
     val name: String,
     val destination: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
-    val days: List<DayModel>
 )
 
 fun TripModel.isValid(): Boolean
@@ -19,7 +18,6 @@ fun TripModel.isValid(): Boolean
             destination.isNotBlank() &&
             !startDate.isBefore(LocalDate.now()) &&
             startDate.isBefore(endDate)
-//            && days.isNotEmpty()
 }
 
 fun TripModel.toTrip(): Trip

@@ -10,7 +10,7 @@ class DeleteTripByIdUseCase @Inject constructor(
 )
 {
     // 使用 Result 来封装删除结果
-    suspend operator fun invoke(tripId: Int)
+    suspend operator fun invoke(tripId: Long)
     {
         try
         {

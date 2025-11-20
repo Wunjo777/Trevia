@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface TripDao
 {
     @Insert
-    suspend fun insert(trip: Trip)
+    suspend fun insert(trip: Trip): Long
 
     @Update
     suspend fun update(trip: Trip)
@@ -23,5 +23,8 @@ interface TripDao
     fun getAllTrips(): Flow<List<Trip>>
 
     @Query("DELETE FROM trips WHERE id = :tripId")
-    suspend fun deleteTripById(tripId: Int)
+    suspend fun deleteTripById(tripId: Long)
+
+    @Query("SELECT * FROM trips WHERE id = :tripId")
+    fun getTripById(tripId: Long): Flow<Trip?>
 }

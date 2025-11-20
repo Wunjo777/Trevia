@@ -9,6 +9,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.example.trevia.ui.TreviaApp
 import com.example.trevia.ui.schedule.AddTripScreen
+import com.example.trevia.ui.schedule.TripDetailScreen
 import com.example.trevia.ui.schedule.TripListScreen
 import com.example.trevia.ui.theme.TreviaTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +23,8 @@ class MainActivity : ComponentActivity()
         enableEdgeToEdge()
         setContent {
             TreviaTheme {
-                TreviaApp()
+                TripDetailScreen()
+//                TreviaApp()
             }
         }
     }

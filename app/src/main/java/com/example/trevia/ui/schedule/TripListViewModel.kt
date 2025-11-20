@@ -37,7 +37,7 @@ class TripListViewModel @Inject constructor(
     val tripListUiState: StateFlow<TripListUiState> = _tripListUiState
 
 
-    fun deleteTripById(tripId: Int)
+    fun deleteTripById(tripId: Long)
     {
         viewModelScope.launch {
             deleteTripByIdUseCase(tripId)
@@ -51,7 +51,7 @@ data class TripListUiState(
 )
 
 data class TripItemUiState(
-    val tripId: Int = 0,
+    val tripId: Long = 0,
     val tripName: String = "",
     val tripLocation: String = "",
     val tripDateRange: String = "",

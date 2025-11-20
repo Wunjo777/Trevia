@@ -69,6 +69,5 @@ fun AddTripUiState.toTripModel(): TripModel
         destination = tripLocation,
         startDate = if (tripDateRange.isNotEmpty()) LocalDate.parse(tripDateRange.split(" ~ ")[0]) else LocalDate.MIN,
         endDate = if (tripDateRange.isNotEmpty()) LocalDate.parse(tripDateRange.split(" ~ ")[1]) else LocalDate.MIN,
-        days = emptyList()//TODO: 实现添加天数
     )
 }

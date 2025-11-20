@@ -73,7 +73,7 @@ fun TripListScreen(
 
 @Composable
 private fun TripListContent(
-    onDeleteTrip: (Int) -> Unit,
+     onDeleteTrip: (Long) -> Unit,
     tripList: List<TripItemUiState>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
@@ -106,7 +106,7 @@ private fun TripListContent(
 
 @Composable
 private fun TripList(
-    onDeleteTrip: (Int) -> Unit,
+    onDeleteTrip: (Long) -> Unit,
     tripList: List<TripItemUiState>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues
@@ -129,7 +129,7 @@ private fun TripList(
 @Composable
 fun SwipeableTripItem(
     tripItem: TripItemUiState,
-    onDeleteTrip: (Int) -> Unit,  // 删除行程的回调
+    onDeleteTrip: (Long) -> Unit,  // 删除行程的回调
     modifier: Modifier = Modifier
 )
 {
