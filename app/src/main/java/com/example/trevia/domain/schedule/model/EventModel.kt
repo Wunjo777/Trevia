@@ -1,8 +1,16 @@
 package com.example.trevia.domain.schedule.model
 
+import com.example.trevia.data.schedule.Event
+
 data class EventModel(
-    val name: String,
-    val description: String,
-    val startTime: String,
-    val endTime: String
+    val id: Long,
+    val dayId: Long,
 )
+
+fun EventModel.toEvent(): Event
+{
+    return Event(
+        id = this.id,
+        dayId = this.dayId,
+    )
+}

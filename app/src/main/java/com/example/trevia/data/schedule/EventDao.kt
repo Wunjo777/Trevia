@@ -8,17 +8,17 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface DayDao
+interface EventDao
 {
     @Insert
-    suspend fun insert(day: Day)
+    suspend fun insert(event: Event)
 
     @Delete
-    suspend fun delete(day: Day)
+    suspend fun delete(event: Event)
 
     @Update
-    suspend fun update(day: Day)
+    suspend fun update(event: Event)
 
-    @Query("SELECT * FROM days WHERE tripId = :tripId")
-    fun getDaysByTripId(tripId: Long): Flow<List<Day>>
+    @Query("SELECT * FROM events WHERE dayId = :dayId")
+    fun getEventsByDayId(dayId: Long): Flow<List<Event>>
 }

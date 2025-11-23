@@ -1,6 +1,7 @@
 package com.example.trevia.domain.schedule.model
 
 import com.example.trevia.data.schedule.Trip
+import com.example.trevia.utils.isoLocalDateToStr
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -22,9 +23,8 @@ fun TripModel.isValid(): Boolean
 
 fun TripModel.toTrip(): Trip
 {
-    val formatter = DateTimeFormatter.ISO_LOCAL_DATE
-    val startDateString = startDate.format(formatter)
-    val endDateString = endDate.format(formatter)
+    val startDateString = startDate.isoLocalDateToStr()
+    val endDateString = endDate.isoLocalDateToStr()
     return Trip(
         name = name,
         destination = destination,

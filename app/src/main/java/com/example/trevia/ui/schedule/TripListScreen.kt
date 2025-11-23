@@ -2,6 +2,7 @@ package com.example.trevia.ui.schedule
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,6 +47,7 @@ import com.example.trevia.ui.utils.DeleteConfirmDialog
 @Composable
 fun TripListScreen(
     navigateToAddTrip: () -> Unit,
+    navigateToTripDetail: (Long) -> Unit,
     tripListViewModel: TripListViewModel = hiltViewModel()
 )
 {
@@ -65,6 +67,7 @@ fun TripListScreen(
     { innerPadding ->
         TripListContent(
             onDeleteTrip = { tripListViewModel.deleteTripById(it) },
+            navigateToTripDetail = navigateToTripDetail,
             tripListUiState.trips,
             contentPadding = innerPadding
         )
@@ -73,7 +76,8 @@ fun TripListScreen(
 
 @Composable
 private fun TripListContent(
-     onDeleteTrip: (Long) -> Unit,
+    onDeleteTrip: (Long) -> Unit,
+    navigateToTripDetail: (Long) -> Unit,
     tripList: List<TripItemUiState>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
@@ -96,6 +100,7 @@ private fun TripListContent(
         {
             TripList(
                 onDeleteTrip = onDeleteTrip,
+                navigateToTripDetail = navigateToTripDetail,
                 tripList = tripList,
                 contentPadding = contentPadding,
                 modifier = Modifier
@@ -107,6 +112,7 @@ private fun TripListContent(
 @Composable
 private fun TripList(
     onDeleteTrip: (Long) -> Unit,
+    navigateToTripDetail: (Long) -> Unit,
     tripList: List<TripItemUiState>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues
@@ -119,6 +125,7 @@ private fun TripList(
         items(items = tripList, key = { it.tripId }) { item ->
             SwipeableTripItem(
                 tripItem = item,
+                navigateToTripDetail = navigateToTripDetail,
                 onDeleteTrip = { onDeleteTrip(it) },
                 modifier = Modifier
             )
@@ -129,6 +136,7 @@ private fun TripList(
 @Composable
 fun SwipeableTripItem(
     tripItem: TripItemUiState,
+    navigateToTripDetail: (Long) -> Unit,
     onDeleteTrip: (Long) -> Unit,  // 删除行程的回调
     modifier: Modifier = Modifier
 )
@@ -181,13 +189,14 @@ fun SwipeableTripItem(
             }
         }
     ) {
-        TripItem(tripItem = tripItem)
+        TripItem(tripItem = tripItem, navigateToTripDetail = navigateToTripDetail)
     }
 }
 
 @Composable
 private fun TripItem(
     tripItem: TripItemUiState,
+    navigateToTripDetail: (Long) -> Unit,
     modifier: Modifier = Modifier
 )
 {
@@ -196,7 +205,9 @@ private fun TripItem(
             .fillMaxWidth()
             .padding(
                 dimensionResource(R.dimen.padding_small)
-            )
+            ).clickable {
+                navigateToTripDetail(tripItem.tripId)
+            }
     ) {
         Column(
             modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))

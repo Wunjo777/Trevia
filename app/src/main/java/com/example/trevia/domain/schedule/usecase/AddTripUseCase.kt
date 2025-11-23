@@ -21,9 +21,8 @@ class AddTripUseCase @Inject constructor(
             {
                 return AddTripResult.InvalidData
             }
-            val trip = tripModel.toTrip()
             // Insert the trip into the database
-            val tripId = tripRepository.insertTrip(trip)
+            val tripId = tripRepository.insertTrip(tripModel)
             // Create the days for the trip
             createDaysForTripUseCase(tripModel.copy(id = tripId))
             AddTripResult.Success

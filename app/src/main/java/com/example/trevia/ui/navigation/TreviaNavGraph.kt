@@ -19,7 +19,9 @@ fun TreviaNavHost(
 {
     NavHost(navController = navController, startDestination = "trip_list") {
         composable("trip_list") {
-            TripListScreen(navigateToAddTrip = { navController.navigate("add_trip") })
+            TripListScreen(
+                navigateToAddTrip = { navController.navigate("add_trip") },
+                navigateToTripDetail = { navController.navigate("${TripDetailsDestination.ROUTE}/$it") })
         }
         composable("add_trip") {
             AddTripScreen(navigateBack = { navController.popBackStack() })
@@ -30,7 +32,7 @@ fun TreviaNavHost(
                 type = NavType.LongType
             })
         ) {
-            TripDetailScreen()
+            TripDetailScreen(navigateBack = { navController.popBackStack() })
         }
     }
 }

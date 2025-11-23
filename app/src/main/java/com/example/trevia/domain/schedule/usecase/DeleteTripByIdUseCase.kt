@@ -9,7 +9,6 @@ class DeleteTripByIdUseCase @Inject constructor(
     @OfflineRepo private val tripRepository: TripRepository
 )
 {
-    // 使用 Result 来封装删除结果
     suspend operator fun invoke(tripId: Long)
     {
         try

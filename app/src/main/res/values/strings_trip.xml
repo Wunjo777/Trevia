@@ -16,4 +16,5 @@
     <string name="days_until_trip">计划 %1$d 天后出发</string>
     <string name="trip_days_count"> %1$d 天 %2$d 晚</string>
     <string name="add_trip_title">添加行程</string>
+    <string name="trip_not_found">行程不存在!</string>
 </resources>

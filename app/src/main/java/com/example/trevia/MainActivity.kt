@@ -23,8 +23,7 @@ class MainActivity : ComponentActivity()
         enableEdgeToEdge()
         setContent {
             TreviaTheme {
-                TripDetailScreen()
-//                TreviaApp()
+                TreviaApp()
             }
         }
     }

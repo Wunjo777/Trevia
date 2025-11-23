@@ -3,6 +3,7 @@ package com.example.trevia.di
 import android.content.Context
 import androidx.room.Room
 import com.example.trevia.data.schedule.DayDao
+import com.example.trevia.data.schedule.EventDao
 import com.example.trevia.data.schedule.ScheduleDatabase
 import com.example.trevia.data.schedule.TripDao
 import dagger.Module
@@ -41,5 +42,12 @@ object DatabaseModule
     fun provideDayDao(db: ScheduleDatabase): DayDao
     {
         return db.dayDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideEventDao(db: ScheduleDatabase): EventDao
+    {
+        return db.eventDao()
     }
 }

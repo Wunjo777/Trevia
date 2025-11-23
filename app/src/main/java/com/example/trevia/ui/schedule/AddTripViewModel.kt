@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.trevia.domain.schedule.model.TripModel
 import com.example.trevia.domain.schedule.usecase.AddTripResult
 import com.example.trevia.domain.schedule.usecase.AddTripUseCase
+import com.example.trevia.utils.strToIsoLocalDate
 import com.example.trevia.utils.toDateString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -59,7 +60,7 @@ data class AddTripUiState(
     val tripName: String = "",
     val tripLocation: String = "",
     val tripDateRange: String = "",
-    val saveTripResult: AddTripResult?=null
+    val saveTripResult: AddTripResult? = null
 )
 
 fun AddTripUiState.toTripModel(): TripModel
@@ -67,7 +68,7 @@ fun AddTripUiState.toTripModel(): TripModel
     return TripModel(
         name = tripName,
         destination = tripLocation,
-        startDate = if (tripDateRange.isNotEmpty()) LocalDate.parse(tripDateRange.split(" ~ ")[0]) else LocalDate.MIN,
-        endDate = if (tripDateRange.isNotEmpty()) LocalDate.parse(tripDateRange.split(" ~ ")[1]) else LocalDate.MIN,
+        startDate = if (tripDateRange.isNotEmpty()) tripDateRange.split(" ~ ")[0].strToIsoLocalDate() else LocalDate.MIN,
+        endDate = if (tripDateRange.isNotEmpty()) tripDateRange.split(" ~ ")[1].strToIsoLocalDate() else LocalDate.MIN,
     )
 }

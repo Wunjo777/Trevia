@@ -4,6 +4,10 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.trevia.domain.schedule.model.DayModel
+import com.example.trevia.utils.strToIsoLocalDate
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 @Entity(
@@ -25,3 +29,13 @@ data class Day(
     val date: String,
     val indexInTrip: Int
 )
+
+fun Day.toDayModel(): DayModel
+{
+    return DayModel(
+        id = this.id,
+        tripId = this.tripId,
+        date = this.date.strToIsoLocalDate(),
+        indexInTrip = this.indexInTrip
+    )
+}

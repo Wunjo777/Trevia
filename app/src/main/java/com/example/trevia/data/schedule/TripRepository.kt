@@ -5,11 +5,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface TripRepository
 {
-    suspend fun insertTrip(trip: Trip): Long
+    suspend fun insertTrip(tripModel: TripModel): Long
 
-    suspend fun deleteTrip(trip: Trip)
+    suspend fun deleteTrip(tripModel: TripModel)
 
-    suspend fun updateTrip(trip: Trip)
+    suspend fun updateTrip(tripModel: TripModel)
 
     suspend fun deleteTripById(tripId: Long)
 
