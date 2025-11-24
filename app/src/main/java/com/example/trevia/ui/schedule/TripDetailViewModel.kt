@@ -56,8 +56,14 @@ class TripDetailViewModel @Inject constructor(
         DayWithEventsUiState(
             dayId = id,
             date = date.isoLocalDateToStr(),
+            indexInTrip = indexInTrip,
             events = events.map { EventUiState(it.id) }
         )
+
+    fun addEvent()
+    {
+
+    }
 }
 
 sealed interface TripDetailUiState
@@ -82,5 +88,9 @@ data class DayWithEventsUiState(
 )
 
 data class EventUiState(
-    val eventId: Long = 0
+    val eventId: Long = 0,
+    val location: String = "",
+    val startTime: String = "",
+    val endTime: String = "",
+    val description: String = ""
 )

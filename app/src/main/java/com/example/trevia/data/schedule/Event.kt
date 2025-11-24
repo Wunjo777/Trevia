@@ -21,10 +21,20 @@ import com.example.trevia.domain.schedule.model.EventModel
 data class Event(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val dayId: Long
+    val tripId:Long,
+    val dayId: Long,
+    val location: String,
+    val startTime: String,
+    val endTime: String,
+    val description: String
 )
 
 fun Event.toEventModel() = EventModel(
     id = this.id,
-    dayId = this.dayId
+    tripId = this.tripId,
+    dayId = this.dayId,
+    location = this.location,
+    startTime = this.startTime,
+    endTime = this.endTime,
+    description = this.description
 )
