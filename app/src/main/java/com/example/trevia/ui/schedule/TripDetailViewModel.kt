@@ -29,6 +29,7 @@ class TripDetailViewModel @Inject constructor(
     private val currentTripId: Long =
         checkNotNull(savedStateHandle[TripDetailsDestination.TRIP_ID_ARG])
 
+    //region 创建TripDetailUiState
     val tripDetailUiState: StateFlow<TripDetailUiState> =
         getTripWithDaysAndEventsUseCase(currentTripId)
             .map { trip ->
@@ -59,11 +60,30 @@ class TripDetailViewModel @Inject constructor(
             indexInTrip = indexInTrip,
             events = events.map { EventUiState(it.id) }
         )
+    //endregion
 
-    fun addEvent()
-    {
+    //region 弹出TipList
+    private val _locationSuggestions = MutableStateFlow<List<TipModel>>(emptyList())
+    val locationSuggestions: StateFlow<List<TipModel>> = _locationSuggestions
 
+    // 搜索输入框的内容
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    // 控制搜索逻辑
+    fun onSearchQueryChanged(query: String, city: String) {
+        _searchQuery.value = query
+        if (query.isNotEmpty()) {
+            // 调用 UseCase 获取输入提示
+            viewModelScope.launch {
+                val suggestions = getInputTipsUseCase(query, city)
+                _locationSuggestions.value = suggestions
+            }
+        } else {
+            _locationSuggestions.value = emptyList()  // 清空提示列表
+        }
     }
+    //endregion
 }
 
 sealed interface TripDetailUiState
