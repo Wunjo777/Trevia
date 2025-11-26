@@ -1,7 +1,7 @@
-package com.example.trevia.domain.AMap.usecase
+package com.example.trevia.domain.amap.usecase
 
 import com.example.trevia.data.amap.TipRepository
-import com.example.trevia.domain.AMap.model.TipModel
+import com.example.trevia.domain.amap.model.TipModel
 import javax.inject.Inject
 
 class GetInputTipsUseCase @Inject constructor(

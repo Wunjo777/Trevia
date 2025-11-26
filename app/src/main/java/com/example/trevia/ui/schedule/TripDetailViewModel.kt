@@ -1,8 +1,10 @@
 package com.example.trevia.ui.schedule
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.trevia.domain.amap.usecase.GetInputTipsUseCase
 import com.example.trevia.domain.schedule.model.DayWithEventsModel
 import com.example.trevia.domain.schedule.model.TripWithDaysAndEventsModel
 import com.example.trevia.domain.schedule.usecase.GetTripWithDaysAndEventsUseCase
@@ -10,17 +12,34 @@ import com.example.trevia.ui.navigation.TripDetailsDestination
 import com.example.trevia.utils.isoLocalDateToStr
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.example.trevia.domain.amap.model.toLocationTipUiState
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class TripDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    getTripWithDaysAndEventsUseCase: GetTripWithDaysAndEventsUseCase
+    getTripWithDaysAndEventsUseCase: GetTripWithDaysAndEventsUseCase,
+    getInputTipsUseCase: GetInputTipsUseCase
 ) : ViewModel()
 {
+    init
+    {
+        Log.d("SearchVM", "TripDetailViewModel created")
+    }
+
     companion object
     {
         private const val TIMEOUT_MILLIS = 5_000L
@@ -63,25 +82,37 @@ class TripDetailViewModel @Inject constructor(
     //endregion
 
     //region 弹出TipList
-    private val _locationSuggestions = MutableStateFlow<List<TipModel>>(emptyList())
-    val locationSuggestions: StateFlow<List<TipModel>> = _locationSuggestions
+    // 用户输入关键词
+    private val _keyword = MutableStateFlow("")
+    val keyword: StateFlow<String> = _keyword
 
-    // 搜索输入框的内容
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery
+    // 提示列表，StateFlow 供 Compose 直接收集
 
-    // 控制搜索逻辑
-    fun onSearchQueryChanged(query: String, city: String) {
-        _searchQuery.value = query
-        if (query.isNotEmpty()) {
-            // 调用 UseCase 获取输入提示
-            viewModelScope.launch {
-                val suggestions = getInputTipsUseCase(query, city)
-                _locationSuggestions.value = suggestions
-            }
-        } else {
-            _locationSuggestions.value = emptyList()  // 清空提示列表
-        }
+    val tips: StateFlow<List<LocationTipUiState>> = _keyword
+        .debounce(300)      // 防抖 300ms
+        .filter { it.isNotBlank() }      // 忽略空输入
+        .distinctUntilChanged()          // 相同关键词不重复请求
+        .flatMapLatest { keyword ->
+            flow {
+                Log.d("SearchVM", "Request tips for: $keyword")
+                val location = if (tripDetailUiState.value is TripDetailUiState.Success)
+                    (tripDetailUiState.value as TripDetailUiState.Success).tripLocation
+                else ""
+                val result = getInputTipsUseCase(keyword, location)
+                Log.d("SearchVM", "Result: $result")
+                emit(result)
+            }.catch { e ->
+                Log.e("SearchVM", "Error fetching tips", e)
+                emit(emptyList())
+            } // 出错显示空列表
+        }.map { tipList -> tipList.map { tip->tip.toLocationTipUiState() } }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    // 当用户输入变化时调用
+    fun onKeywordChanged(newKeyword: String)
+    {
+        Log.d("SearchVM", "Keyword changed: $newKeyword")
+        _keyword.value = newKeyword
     }
     //endregion
 }
@@ -113,4 +144,10 @@ data class EventUiState(
     val startTime: String = "",
     val endTime: String = "",
     val description: String = ""
+)
+
+data class LocationTipUiState(
+    val tipId: String = "",
+    val name: String = "",
+    val address: String = ""
 )

@@ -50,6 +50,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.trevia.R
+import com.example.trevia.domain.amap.model.TipModel
+import com.example.trevia.domain.amap.model.toLocationTipUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.E
@@ -63,6 +65,8 @@ fun TripDetailScreen(
 )
 {
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()
+    val keyword by tripDetailViewModel.keyword.collectAsState()
+    val tips by tripDetailViewModel.tips.collectAsState()
     var isAddingEvent by remember { mutableStateOf(false) }
     val scaffoldState = rememberBottomSheetScaffoldState()
 
@@ -121,12 +125,24 @@ fun TripDetailScreen(
 
     if (isAddingEvent)
     {
-        LocationSearchContent(onAddEventChange = { isAddingEvent = it })
+        LocationSearchContent(
+            onAddEventChange = { isAddingEvent = it },
+            onKeywordChanged = { keyword ->
+                tripDetailViewModel.onKeywordChanged(keyword)
+            },
+            keyword = keyword,
+            tips = tips,
+        )
     }
 }
 
 @Composable
-fun LocationSearchContent(onAddEventChange: (Boolean) -> Unit)
+fun LocationSearchContent(
+    onAddEventChange: (Boolean) -> Unit,
+    onKeywordChanged: (String) -> Unit,
+    keyword: String,
+    tips: List<LocationTipUiState>,
+)
 {
     // 背景变暗
     Box(
@@ -134,11 +150,15 @@ fun LocationSearchContent(onAddEventChange: (Boolean) -> Unit)
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.45f))
             .clickable { onAddEventChange(false) }
+            .navigationBarsPadding()
     ) {
 
         // 搜索栏
         SearchLocationBar(
             onClose = { onAddEventChange(false) },
+            onKeywordChanged = onKeywordChanged,
+            keyword = keyword,
+            tips = tips,
             modifier = Modifier.align(
                 Alignment.BottomCenter
             )
@@ -147,41 +167,134 @@ fun LocationSearchContent(onAddEventChange: (Boolean) -> Unit)
 }
 
 @Composable
-fun SearchLocationBar(onClose: () -> Unit, modifier: Modifier = Modifier)
+fun SearchLocationBar(
+    onClose: () -> Unit,
+    onKeywordChanged: (String) -> Unit,
+    keyword: String,
+    tips: List<LocationTipUiState>,
+    modifier: Modifier = Modifier
+)
 {
     val focusRequester = remember { FocusRequester() }
-    val keyboard = LocalSoftwareKeyboardController.current
 
-    // 自动弹出输入法
-    LaunchedEffect(Unit) {
-        delay(100)
-        focusRequester.requestFocus()
-        keyboard?.show()
-    }
+    val tmpTipsList: List<LocationTipUiState> = listOf(
+        TipModel(
+            poiId = "BV10243488",
+            name = "市民中心(地铁站)",
+            district = "广东省深圳市福田区",
+            address = "2号线(8号线);4 号线 / 龙华线"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B02F300690",
+            name = "深圳市民中心",
+            district = "广东省深圳市福田区",
+            address = "福中三路(市民中心地铁站C口步行190米)"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B0FFFP097E",
+            name = "深圳市民中心C区",
+            district = "广东省深圳市福田区",
+            address = "福中三路(福田地铁站15号口步行300米)"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B0KUNCL5Q2",
+            name = "市民中心",
+            district = "广东省深圳市福田区",
+            address = ""
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B02F38SB85",
+            name = "深圳市民政局(福中三路)",
+            district = "广东省深圳市福田区",
+            address = "深南大道深圳市民中心行政服务大厅西37"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B02F300691",
+            name = "深圳市人民政府",
+            district = "广东省深圳市福田区",
+            address = "莲花街道福中社区福中三路2012号市民中心C区"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B02F37UFRS",
+            name = "深圳市人民政府-外事办公室",
+            district = "广东省深圳市福田区",
+            address = "深南大道深圳市民中心行政服务大厅西46-50"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B0LRM7YD6N",
+            name = "深圳市民政局",
+            district = "广东省深圳市福田区",
+            address = "深南大道6009号"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B02F37UAJ1",
+            name = "深圳市人民代表大会常务委员会-信访室",
+            district = "广东省深圳市福田区",
+            address = "福中三路市政府大楼内(市民中心地铁站B口步行150米)"
+        ).toLocationTipUiState(),
+        TipModel(
+            poiId = "B02F38RWRD",
+            name = "深圳市人民政府应急管理办公室",
+            district = "广东省深圳市福田区",
+            address = "福中三路市民中心C区"
+        ).toLocationTipUiState()
+    )
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
+            .fillMaxHeight(0.5f)
             .background(Color.White, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(16.dp)
     ) {
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-
-                TextField(
-                    value = "",
-                    onValueChange = { /* TODO 搜索地点 */ },
-                    placeholder = { Text(stringResource(R.string.search_location)) },
+        LazyColumn(modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))) {
+            items(tmpTipsList, key = { it.tipId }) { tip ->
+                Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .focusRequester(focusRequester)
-                )
-
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
+                        .padding(dimensionResource(R.dimen.padding_small))
+                        .clickable {
+                            // 点击提示可以处理，比如更新输入框或导航
+                        }) {
+                    Text(
+                        text = tip.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                    Text(
+                        text = tip.address,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
                 }
+
+
             }
         }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
+        ) {
+
+            TextField(
+                value = keyword,
+                onValueChange = { onKeywordChanged(it) },
+                placeholder = { Text(stringResource(R.string.search_location)) },
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester)
+            )
+
+            IconButton(onClick = onClose) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
+            }
+        }
+
+        // 提示列表
+
     }
 }
 
@@ -226,6 +339,7 @@ fun ExpandedSheetContent(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.8f)
+            .navigationBarsPadding()
     ) {
         // ------- 主体内容 -------
         Column {
@@ -501,7 +615,8 @@ fun FoldedSheetContent(tripDetailUiState: TripDetailUiState.Success)
     Column(
         Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.8f),
+            .fillMaxHeight(0.8f)
+            .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
