@@ -54,7 +54,9 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.foundation.layout)
     implementation("androidx.navigation:navigation-compose:2.8.5")
-    implementation(files("libs/AMap3d_Lite.aar"))//AMap SDK
+    implementation(files("libs/AMap3d_Lite.aar"))
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.material3)//AMap SDK
     //Room
     val room_version = "2.8.3"
     implementation("androidx.room:room-runtime:$room_version")

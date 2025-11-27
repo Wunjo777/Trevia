@@ -18,10 +18,17 @@ class EventRepository @Inject constructor(private val eventDao: EventDao)
 
     suspend fun updateEvent(eventModel: EventModel) = eventDao.update(eventModel.toEvent())
 
+    suspend fun deleteEventById(eventId: Long) = eventDao.deleteEventById(eventId)
+
     fun getEventsByDayId(dayId: Long): Flow<List<EventModel>>
     {
         return eventDao.getEventsByDayId(dayId).map { events ->
             events.map { it.toEventModel() }
         }
+    }
+
+    suspend fun getEventById(eventId: Long): EventModel?
+    {
+        return eventDao.getEventById(eventId)?.toEventModel()
     }
 }

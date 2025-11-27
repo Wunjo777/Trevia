@@ -42,6 +42,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.room.Delete
 import com.example.trevia.R
 import com.example.trevia.ui.utils.DeleteConfirmDialog
+import com.example.trevia.ui.utils.SwipeToDismissItem
 
 
 @Composable
@@ -123,73 +124,18 @@ private fun TripList(
         contentPadding = contentPadding
     ) {
         items(items = tripList, key = { it.tripId }) { item ->
-            SwipeableTripItem(
-                tripItem = item,
-                navigateToTripDetail = navigateToTripDetail,
-                onDeleteTrip = { onDeleteTrip(it) },
+            SwipeToDismissItem(
+                itemId = item.tripId,
+                onDeleteItem = { onDeleteTrip(it) },
+                content = {
+                    TripItem(
+                        tripItem = item,
+                        navigateToTripDetail = navigateToTripDetail
+                    )
+                },
                 modifier = Modifier
             )
         }
-    }
-}
-
-@Composable
-fun SwipeableTripItem(
-    tripItem: TripItemUiState,
-    navigateToTripDetail: (Long) -> Unit,
-    onDeleteTrip: (Long) -> Unit,  // 删除行程的回调
-    modifier: Modifier = Modifier
-)
-{
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    // SwipeToDismissBox 状态，确认滑动方向
-    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(
-        initialValue = SwipeToDismissBoxValue.Settled,
-        confirmValueChange = { newState ->
-            if (newState == SwipeToDismissBoxValue.EndToStart)
-            {
-                showDeleteDialog = true
-            }
-            newState != SwipeToDismissBoxValue.EndToStart
-        },
-    )
-
-    if (showDeleteDialog)
-    {
-        DeleteConfirmDialog(
-            onDeleteConfirm = {
-                onDeleteTrip(tripItem.tripId)
-                showDeleteDialog = false
-            },
-            onDeleteCancel = { showDeleteDialog = false }
-        )
-    }
-
-    SwipeToDismissBox(
-        state = swipeToDismissBoxState,
-        modifier = modifier.fillMaxSize(),
-        enableDismissFromStartToEnd = false,
-        backgroundContent = {
-            // 处理右侧滑动时显示的删除按钮
-            if (swipeToDismissBoxState.dismissDirection == SwipeToDismissBoxValue.EndToStart)
-            {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Red)
-                        .wrapContentSize(Alignment.CenterEnd)
-                        .align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Remove Trip",
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-    ) {
-        TripItem(tripItem = tripItem, navigateToTripDetail = navigateToTripDetail)
     }
 }
 
@@ -205,7 +151,8 @@ private fun TripItem(
             .fillMaxWidth()
             .padding(
                 dimensionResource(R.dimen.padding_small)
-            ).clickable {
+            )
+            .clickable {
                 navigateToTripDetail(tripItem.tripId)
             }
     ) {

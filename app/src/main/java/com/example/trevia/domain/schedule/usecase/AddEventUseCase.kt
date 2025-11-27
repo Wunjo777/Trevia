@@ -6,11 +6,11 @@ import com.example.trevia.domain.schedule.model.EventModel
 import jakarta.inject.Inject
 
 class AddEventUseCase @Inject constructor(
-    @OfflineRepo private val eventRepository: EventRepository
+    private val eventRepository: EventRepository
 )
 {
     suspend operator fun invoke(eventModel: EventModel)
     {
-
+        eventRepository.insertEvent(eventModel)
     }
 }

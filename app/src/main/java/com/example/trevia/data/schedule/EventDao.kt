@@ -19,6 +19,12 @@ interface EventDao
     @Update
     suspend fun update(event: Event)
 
+    @Query("DELETE FROM events WHERE id = :eventId")
+    suspend fun deleteEventById(eventId: Long)
+
     @Query("SELECT * FROM events WHERE dayId = :dayId")
     fun getEventsByDayId(dayId: Long): Flow<List<Event>>
+
+    @Query("SELECT * FROM events WHERE id = :eventId")
+    suspend fun getEventById(eventId: Long): Event?
 }

@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.trevia.domain.schedule.model.EventModel
+import com.example.trevia.utils.toLocalTime
 
 @Entity(
     tableName = "events",
@@ -24,9 +25,10 @@ data class Event(
     val tripId:Long,
     val dayId: Long,
     val location: String,
-    val startTime: String,
-    val endTime: String,
-    val description: String
+    val address:String,
+    val startTime: String?,
+    val endTime: String?,
+    val description: String?
 )
 
 fun Event.toEventModel() = EventModel(
@@ -34,7 +36,8 @@ fun Event.toEventModel() = EventModel(
     tripId = this.tripId,
     dayId = this.dayId,
     location = this.location,
-    startTime = this.startTime,
-    endTime = this.endTime,
+    address = this.address,
+    startTime = this.startTime?.toLocalTime(),
+    endTime = this.endTime?.toLocalTime(),
     description = this.description
 )

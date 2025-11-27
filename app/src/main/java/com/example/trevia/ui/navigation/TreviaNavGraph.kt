@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.trevia.ui.schedule.AddTripScreen
+import com.example.trevia.ui.schedule.EditEventScreen
 import com.example.trevia.ui.schedule.TripDetailScreen
 import com.example.trevia.ui.schedule.TripListScreen
 
@@ -32,7 +33,18 @@ fun TreviaNavHost(
                 type = NavType.LongType
             })
         ) {
-            TripDetailScreen(navigateBack = { navController.popBackStack() })
+            TripDetailScreen(
+                navigateBack = { navController.popBackStack() },
+                navigateToEditEvent = { navController.navigate("${EditEventDestination.ROUTE}/$it") })
+        }
+        composable(
+            route = EditEventDestination.eventWithArgs,
+            arguments = listOf(navArgument(EditEventDestination.EVENT_ID_ARG) {
+                type = NavType.LongType
+            })
+        ) {
+            EditEventScreen(
+                navigateBack = { navController.popBackStack() })
         }
     }
 }

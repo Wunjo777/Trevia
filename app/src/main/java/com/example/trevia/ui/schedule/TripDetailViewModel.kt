@@ -1,6 +1,7 @@
 package com.example.trevia.ui.schedule
 
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +15,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.example.trevia.domain.amap.model.toLocationTipUiState
+import com.example.trevia.domain.schedule.model.EventModel
+import com.example.trevia.domain.schedule.usecase.AddEventUseCase
+import com.example.trevia.domain.schedule.usecase.DeleteEventByIdUseCase
+import com.example.trevia.utils.toTimeString
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,20 +31,19 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.LocalTime
 
 @HiltViewModel
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class TripDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     getTripWithDaysAndEventsUseCase: GetTripWithDaysAndEventsUseCase,
-    getInputTipsUseCase: GetInputTipsUseCase
+    getInputTipsUseCase: GetInputTipsUseCase,
+    private val addEventUseCase: AddEventUseCase,
+    private val deleteEventByIdUseCase: DeleteEventByIdUseCase
 ) : ViewModel()
 {
-    init
-    {
-        Log.d("SearchVM", "TripDetailViewModel created")
-    }
-
     companion object
     {
         private const val TIMEOUT_MILLIS = 5_000L
@@ -47,6 +51,13 @@ class TripDetailViewModel @Inject constructor(
 
     private val currentTripId: Long =
         checkNotNull(savedStateHandle[TripDetailsDestination.TRIP_ID_ARG])
+
+    private val _selectedDayId = MutableStateFlow<Long?>(null)
+    val selectedDayId: StateFlow<Long?> = _selectedDayId
+
+    fun onSelectedDayChange(dayId: Long?) {
+        _selectedDayId.value = dayId
+    }
 
     //region 创建TripDetailUiState
     val tripDetailUiState: StateFlow<TripDetailUiState> =
@@ -68,7 +79,7 @@ class TripDetailViewModel @Inject constructor(
             tripLocation = destination,
             tripDateRange = "${startDate.isoLocalDateToStr()} ~ ${endDate.isoLocalDateToStr()}",
             tripDaysCount = daysWithEvents.size,
-            days = daysWithEvents.map { it.toUiState() }.sortedBy { it.indexInTrip }
+            days = daysWithEvents.sortedBy { it.indexInTrip }.map { it.toUiState() }
         )
 
     // 扩展函数：DayWithEventsModel -> DayWithEventsUiState
@@ -77,9 +88,63 @@ class TripDetailViewModel @Inject constructor(
             dayId = id,
             date = date.isoLocalDateToStr(),
             indexInTrip = indexInTrip,
-            events = events.map { EventUiState(it.id) }
+            events = events.sortedBy { it.startTime }.map {
+                EventUiState(
+                    it.id,
+                    it.tripId,
+                    it.dayId,
+                    it.location,
+                    it.address,
+                    formatTimeRange(it.startTime, it.endTime),
+                    it.description ?: ""
+                )
+            }
         )
+
+    fun formatTimeRange(start: LocalTime?, end: LocalTime?): String
+    {
+        val startStr = start?.toString() ?: ""
+        val endStr = end?.toString() ?: ""
+
+        return if (startStr.isEmpty() && endStr.isEmpty())
+        {
+            ""
+        }
+        else
+        {
+            "$startStr ~ $endStr"
+        }
+    }
     //endregion
+
+    fun addEventByLocation(
+        tripId: Long,
+        dayId: Long,
+        locationName: String,
+        address: String,
+    )
+    {
+        val eventModel = EventModel(
+            tripId = tripId,
+            dayId = dayId,
+            location = locationName,
+            address = address,
+            startTime = null,
+            endTime = null,
+            description = null
+        )
+        viewModelScope.launch {
+            addEventUseCase(eventModel)
+        }
+
+    }
+
+     fun deleteEventById(eventId: Long)
+    {
+         viewModelScope.launch {
+             deleteEventByIdUseCase(eventId)
+         }
+    }
 
     //region 弹出TipList
     // 用户输入关键词
@@ -105,7 +170,7 @@ class TripDetailViewModel @Inject constructor(
                 Log.e("SearchVM", "Error fetching tips", e)
                 emit(emptyList())
             } // 出错显示空列表
-        }.map { tipList -> tipList.map { tip->tip.toLocationTipUiState() } }
+        }.map { tipList -> tipList.map { tip -> tip.toLocationTipUiState() } }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // 当用户输入变化时调用
@@ -140,9 +205,11 @@ data class DayWithEventsUiState(
 
 data class EventUiState(
     val eventId: Long = 0,
+    val tripId: Long = 0,
+    val dayId: Long = 0,
     val location: String = "",
-    val startTime: String = "",
-    val endTime: String = "",
+    val address: String = "",
+    val timeRange: String = "",
     val description: String = ""
 )
 

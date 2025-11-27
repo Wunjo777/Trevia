@@ -1,6 +1,7 @@
 package com.example.trevia.utils
 
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 fun Long.toDateString(): String {
@@ -18,4 +19,16 @@ fun LocalDate.isoLocalDateToStr(): String
 {
     val formatter = DateTimeFormatter.ISO_LOCAL_DATE
     return this.format(formatter)
+}
+
+fun LocalTime.toTimeString(): String
+{
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return this.format(formatter)
+}
+
+fun String.toLocalTime(): LocalTime
+{
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return LocalTime.parse(this, formatter)
 }

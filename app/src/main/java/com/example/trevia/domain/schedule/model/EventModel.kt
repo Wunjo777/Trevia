@@ -1,15 +1,18 @@
 package com.example.trevia.domain.schedule.model
 
 import com.example.trevia.data.schedule.Event
+import com.example.trevia.utils.toTimeString
+import java.time.LocalTime
 
 data class EventModel(
-    val id: Long,
+    val id: Long=0,
     val tripId: Long,
     val dayId: Long,
     val location: String,
-    val startTime: String,
-    val endTime: String,
-    val description: String = ""
+    val address:String,
+    val startTime: LocalTime?,
+    val endTime: LocalTime?,
+    val description: String?
 )
 
 fun EventModel.toEvent(): Event
@@ -19,8 +22,9 @@ fun EventModel.toEvent(): Event
         tripId = this.tripId,
         dayId = this.dayId,
         location = this.location,
-        startTime = this.startTime,
-        endTime = this.endTime,
+        address = this.address,
+        startTime = this.startTime?.toTimeString(),
+        endTime = this.endTime?.toTimeString(),
         description = this.description
     )
 }

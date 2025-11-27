@@ -52,6 +52,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.trevia.R
 import com.example.trevia.domain.amap.model.TipModel
 import com.example.trevia.domain.amap.model.toLocationTipUiState
+import com.example.trevia.ui.utils.SwipeToDismissItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.E
@@ -60,6 +61,7 @@ import kotlin.math.E
 @Composable
 fun TripDetailScreen(
     navigateBack: () -> Unit,
+    navigateToEditEvent: (Long) -> Unit,
     tripDetailViewModel: TripDetailViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 )
@@ -67,6 +69,7 @@ fun TripDetailScreen(
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()
     val keyword by tripDetailViewModel.keyword.collectAsState()
     val tips by tripDetailViewModel.tips.collectAsState()
+    val selectedDayId by tripDetailViewModel.selectedDayId.collectAsState()
     var isAddingEvent by remember { mutableStateOf(false) }
     val scaffoldState = rememberBottomSheetScaffoldState()
 
@@ -104,8 +107,12 @@ fun TripDetailScreen(
                 is TripDetailUiState.Success ->
                 {
                     TripDetailSheetContent(
+                        selectedDayId = selectedDayId,
                         tripDetailUiState = tripDetailUiState as TripDetailUiState.Success,
                         scaffoldState = scaffoldState,
+                        onDeleteEvent = tripDetailViewModel::deleteEventById,
+                        onClickEvent = navigateToEditEvent,
+                        onSelectedDayChange = { tripDetailViewModel.onSelectedDayChange(it) },
                         onAddEventChange = { isAddingEvent = it }
                     )
                 }
@@ -123,7 +130,7 @@ fun TripDetailScreen(
         }
     }
 
-    if (isAddingEvent)
+    if (isAddingEvent && tripDetailUiState is TripDetailUiState.Success)
     {
         LocationSearchContent(
             onAddEventChange = { isAddingEvent = it },
@@ -131,16 +138,22 @@ fun TripDetailScreen(
                 tripDetailViewModel.onKeywordChanged(keyword)
             },
             keyword = keyword,
+            onTipClick = tripDetailViewModel::addEventByLocation,
             tips = tips,
+            tripId = (tripDetailUiState as TripDetailUiState.Success).tripId,
+            dayId = selectedDayId!!
         )
     }
 }
 
 @Composable
 fun LocationSearchContent(
+    tripId: Long,
+    dayId: Long,
     onAddEventChange: (Boolean) -> Unit,
     onKeywordChanged: (String) -> Unit,
     keyword: String,
+    onTipClick: (tripId: Long, dayId: Long, locationName: String, address: String) -> Unit,
     tips: List<LocationTipUiState>,
 )
 {
@@ -159,6 +172,9 @@ fun LocationSearchContent(
             onKeywordChanged = onKeywordChanged,
             keyword = keyword,
             tips = tips,
+            onTipClick = { locationName, address ->
+                onTipClick(tripId, dayId, locationName, address)
+            },
             modifier = Modifier.align(
                 Alignment.BottomCenter
             )
@@ -172,73 +188,74 @@ fun SearchLocationBar(
     onKeywordChanged: (String) -> Unit,
     keyword: String,
     tips: List<LocationTipUiState>,
+    onTipClick: (locationName: String, address: String) -> Unit,
     modifier: Modifier = Modifier
 )
 {
     val focusRequester = remember { FocusRequester() }
 
-    val tmpTipsList: List<LocationTipUiState> = listOf(
-        TipModel(
-            poiId = "BV10243488",
-            name = "市民中心(地铁站)",
-            district = "广东省深圳市福田区",
-            address = "2号线(8号线);4 号线 / 龙华线"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F300690",
-            name = "深圳市民中心",
-            district = "广东省深圳市福田区",
-            address = "福中三路(市民中心地铁站C口步行190米)"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B0FFFP097E",
-            name = "深圳市民中心C区",
-            district = "广东省深圳市福田区",
-            address = "福中三路(福田地铁站15号口步行300米)"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B0KUNCL5Q2",
-            name = "市民中心",
-            district = "广东省深圳市福田区",
-            address = ""
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F38SB85",
-            name = "深圳市民政局(福中三路)",
-            district = "广东省深圳市福田区",
-            address = "深南大道深圳市民中心行政服务大厅西37"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F300691",
-            name = "深圳市人民政府",
-            district = "广东省深圳市福田区",
-            address = "莲花街道福中社区福中三路2012号市民中心C区"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F37UFRS",
-            name = "深圳市人民政府-外事办公室",
-            district = "广东省深圳市福田区",
-            address = "深南大道深圳市民中心行政服务大厅西46-50"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B0LRM7YD6N",
-            name = "深圳市民政局",
-            district = "广东省深圳市福田区",
-            address = "深南大道6009号"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F37UAJ1",
-            name = "深圳市人民代表大会常务委员会-信访室",
-            district = "广东省深圳市福田区",
-            address = "福中三路市政府大楼内(市民中心地铁站B口步行150米)"
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F38RWRD",
-            name = "深圳市人民政府应急管理办公室",
-            district = "广东省深圳市福田区",
-            address = "福中三路市民中心C区"
-        ).toLocationTipUiState()
-    )
+//    val tmpTipsList: List<LocationTipUiState> = listOf(
+//        TipModel(
+//            poiId = "BV10243488",
+//            name = "市民中心(地铁站)",
+//            district = "广东省深圳市福田区",
+//            address = "2号线(8号线);4 号线 / 龙华线"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F300690",
+//            name = "深圳市民中心",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路(市民中心地铁站C口步行190米)"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B0FFFP097E",
+//            name = "深圳市民中心C区",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路(福田地铁站15号口步行300米)"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B0KUNCL5Q2",
+//            name = "市民中心",
+//            district = "广东省深圳市福田区",
+//            address = ""
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F38SB85",
+//            name = "深圳市民政局(福中三路)",
+//            district = "广东省深圳市福田区",
+//            address = "深南大道深圳市民中心行政服务大厅西37"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F300691",
+//            name = "深圳市人民政府",
+//            district = "广东省深圳市福田区",
+//            address = "莲花街道福中社区福中三路2012号市民中心C区"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F37UFRS",
+//            name = "深圳市人民政府-外事办公室",
+//            district = "广东省深圳市福田区",
+//            address = "深南大道深圳市民中心行政服务大厅西46-50"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B0LRM7YD6N",
+//            name = "深圳市民政局",
+//            district = "广东省深圳市福田区",
+//            address = "深南大道6009号"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F37UAJ1",
+//            name = "深圳市人民代表大会常务委员会-信访室",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路市政府大楼内(市民中心地铁站B口步行150米)"
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F38RWRD",
+//            name = "深圳市人民政府应急管理办公室",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路市民中心C区"
+//        ).toLocationTipUiState()
+//    )
 
     Column(
         modifier = modifier
@@ -248,12 +265,13 @@ fun SearchLocationBar(
             .padding(16.dp)
     ) {
         LazyColumn(modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))) {
-            items(tmpTipsList, key = { it.tipId }) { tip ->
+            items(tips, key = { it.tipId }) { tip ->
                 Column(
                     modifier = Modifier
                         .padding(dimensionResource(R.dimen.padding_small))
                         .clickable {
-                            // 点击提示可以处理，比如更新输入框或导航
+                            onTipClick(tip.name, tip.address)
+                            onClose()
                         }) {
                     Text(
                         text = tip.name,
@@ -293,8 +311,6 @@ fun SearchLocationBar(
             }
         }
 
-        // 提示列表
-
     }
 }
 
@@ -302,8 +318,12 @@ fun SearchLocationBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetailSheetContent(
+    selectedDayId: Long?,
     tripDetailUiState: TripDetailUiState.Success,
     scaffoldState: BottomSheetScaffoldState,
+    onDeleteEvent: (Long) -> Unit,
+    onClickEvent: (Long) -> Unit,
+    onSelectedDayChange: (Long?) -> Unit,
     onAddEventChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 )
@@ -318,7 +338,14 @@ fun TripDetailSheetContent(
     ) { expanded ->
         if (expanded)
         {
-            ExpandedSheetContent(tripDetailUiState, onAddEventChange)
+            ExpandedSheetContent(
+                selectedDayId=selectedDayId,
+                tripDetailUiState=tripDetailUiState,
+                onDeleteEvent=onDeleteEvent,
+                onClickEvent=onClickEvent,
+                onSelectedDayChange=onSelectedDayChange,
+                onAddEventChange=onAddEventChange,
+            )
         }
         else
         {
@@ -329,11 +356,17 @@ fun TripDetailSheetContent(
 
 @Composable
 fun ExpandedSheetContent(
+    selectedDayId: Long?,
     tripDetailUiState: TripDetailUiState.Success,
+    onDeleteEvent: (Long) -> Unit,
+    onClickEvent: (Long) -> Unit,
+    onSelectedDayChange: (Long?) -> Unit,
     onAddEventChange: (Boolean) -> Unit
 )
 {
-    var selectedIndex by remember { mutableIntStateOf(0) }
+    val selectedDay = if (selectedDayId == null) null
+    else tripDetailUiState.days.firstOrNull { it.dayId == selectedDayId }
+
 
     Box(
         modifier = Modifier
@@ -350,25 +383,27 @@ fun ExpandedSheetContent(
                 tripDetailUiState.days.count()
             )
             DaysNavigator(
-                tripDetailUiState.days.count(),
-                selectedIndex = selectedIndex,
-                onSelectedChange = { selectedIndex = it }
+                tripDetailUiState.days,
+                selectedDayId = selectedDayId,
+                onSelectedChange = onSelectedDayChange
             )
 
-            if (selectedIndex == 0)
+            if (selectedDayId == null)
             {
                 DayList(
                     tripDetailUiState.days,
-                    onDayClicked = { selectedIndex = it }
+                    onDayClicked = onSelectedDayChange
                 )
             }
             else
             {
-                val selectedDay = tripDetailUiState.days[selectedIndex - 1]
-
-                if (selectedDay.events.isNotEmpty())
+                if (selectedDay!!.events.isNotEmpty())
                 {
-                    EventList(selectedDay.events)
+                    EventList(
+                        selectedDay.events,
+                        onDeleteEvent = onDeleteEvent,
+                        onClickEvent = onClickEvent
+                    )
                 }
                 else
                 {
@@ -382,20 +417,15 @@ fun ExpandedSheetContent(
         }
 
         // ------- FAB（条件显示） -------
-        if (selectedIndex != 0)
-        {  // 总览不显示按钮
-            val selectedDay = tripDetailUiState.days[selectedIndex - 1]
-
-            if (selectedDay.events.isEmpty())
-            {
-                FloatingActionButton(
-                    onClick = { onAddEventChange(true) },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(24.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "添加事件")
-                }
+        if (selectedDayId != null)// 总览不显示按钮
+        {
+            FloatingActionButton(
+                onClick = { onAddEventChange(true) },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(24.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "添加事件")
             }
         }
     }
@@ -403,7 +433,7 @@ fun ExpandedSheetContent(
 
 
 @Composable
-fun DayList(days: List<DayWithEventsUiState>, onDayClicked: (Int) -> Unit)
+fun DayList(days: List<DayWithEventsUiState>, onDayClicked: (Long) -> Unit)
 {
     LazyColumn(
         modifier = Modifier
@@ -411,13 +441,18 @@ fun DayList(days: List<DayWithEventsUiState>, onDayClicked: (Int) -> Unit)
     {
         items(items = days, key = { day -> day.dayId })
         { day ->
-            DayItem(indexInTrip = day.indexInTrip, onClick = { onDayClicked(it) })
+            DayItem(dayId = day.dayId, indexInTrip = day.indexInTrip, onClick = onDayClicked)
         }
     }
 }
 
+
 @Composable
-fun EventList(events: List<EventUiState>)
+fun EventList(
+    events: List<EventUiState>,
+    onDeleteEvent: (Long) -> Unit,
+    onClickEvent: (Long) -> Unit
+)
 {
     LazyColumn(
         modifier = Modifier
@@ -425,24 +460,41 @@ fun EventList(events: List<EventUiState>)
     {
         items(items = events, key = { event -> event.eventId })
         { event ->
-            EventItem(event)
+            SwipeToDismissItem(
+                itemId = event.eventId,
+                onDeleteItem = { onDeleteEvent(it) },
+                content = { EventItem(event, onClick = onClickEvent) },
+                modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
+            )
         }
     }
 }
 
 @Composable
-fun EventItem(event: EventUiState)
+fun EventItem(event: EventUiState, onClick: (Long) -> Unit)
 {
-    Column()
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(event.eventId) })
     {
-        Text("NotImplementedYet")
+        Column(
+            modifier = Modifier
+                .padding(dimensionResource(R.dimen.padding_small))
+                .fillMaxWidth()
+        ) {
+            Text(event.location, style = MaterialTheme.typography.titleMedium)
+            Text(event.address, style = MaterialTheme.typography.bodyMedium)
+            Text(event.timeRange, style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
 
 @Composable
 fun DayItem(
+    dayId: Long,
     indexInTrip: Int,
-    onClick: (Int) -> Unit
+    onClick: (Long) -> Unit
 )
 {
     Column(
@@ -459,7 +511,7 @@ fun DayItem(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onClick(indexInTrip) }
+                .clickable { onClick(dayId) }
         ) {
             Row(
                 modifier = Modifier
@@ -534,9 +586,9 @@ fun TripInfoContent(
 
 @Composable
 fun DaysNavigator(
-    daysCount: Int,
-    selectedIndex: Int,
-    onSelectedChange: (Int) -> Unit      // 点击回调
+    days: List<DayWithEventsUiState>,
+    selectedDayId: Long?,
+    onSelectedChange: (Long?) -> Unit      // 点击回调
 )
 {
     val scrollState = rememberScrollState()
@@ -551,9 +603,9 @@ fun DaysNavigator(
         // 1. 总览按钮
         DayNavButton(
             label = "总览",
-            isSelected = selectedIndex == 0,
+            isSelected = selectedDayId == null,
             onClick = {
-                onSelectedChange(0)
+                onSelectedChange(null)
             }
         )
 
@@ -567,13 +619,13 @@ fun DaysNavigator(
         )
 
         // 3. 每天按钮
-        for (i in 1..daysCount)
+        for (day in days)
         {
             DayNavButton(
-                label = i.toString(),
-                isSelected = selectedIndex == i,
+                label = day.indexInTrip.toString(),
+                isSelected = selectedDayId == day.dayId,
                 onClick = {
-                    onSelectedChange(i)
+                    onSelectedChange(day.dayId)
                 }
             )
         }
