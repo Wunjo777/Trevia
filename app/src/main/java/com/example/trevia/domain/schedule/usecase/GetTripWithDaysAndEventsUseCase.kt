@@ -6,7 +6,6 @@ import com.example.trevia.data.schedule.TripRepository
 import com.example.trevia.di.OfflineRepo
 import com.example.trevia.domain.schedule.model.DayWithEventsModel
 import com.example.trevia.domain.schedule.model.TripWithDaysAndEventsModel
-import com.example.trevia.ui.schedule.TripDetailUiState
 import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow

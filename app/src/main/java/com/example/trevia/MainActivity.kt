@@ -4,13 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
 import com.example.trevia.ui.TreviaApp
-import com.example.trevia.ui.schedule.AddTripScreen
-import com.example.trevia.ui.schedule.TripDetailScreen
-import com.example.trevia.ui.schedule.TripListScreen
 import com.example.trevia.ui.theme.TreviaTheme
 import dagger.hilt.android.AndroidEntryPoint
 

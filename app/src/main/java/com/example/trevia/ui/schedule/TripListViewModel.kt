@@ -57,6 +57,7 @@ class TripListViewModel @Inject constructor(
             tripId = id,
             tripName = name,
             tripLocation = destination,
+            tripStartDate = startDate.isoLocalDateToStr(),
             tripDateRange = "${startDate.isoLocalDateToStr()} ~ ${endDate.isoLocalDateToStr()}",
             daysUntilTrip = daysUntilTrip,
             tripDaysCount = tripDaysCount
@@ -80,6 +81,7 @@ data class TripItemUiState(
     val tripId: Long = 0,
     val tripName: String = "",
     val tripLocation: String = "",
+    val tripStartDate: String = "",
     val tripDateRange: String = "",
     val tripDaysCount: Int = 0,
     val daysUntilTrip: Int = 0

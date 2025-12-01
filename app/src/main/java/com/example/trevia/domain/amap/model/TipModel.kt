@@ -1,6 +1,6 @@
 package com.example.trevia.domain.amap.model
 
-import com.example.trevia.ui.schedule.LocationTipUiState
+import com.example.trevia.ui.schedule.TripDetail.LocationTipUiState
 
 data class TipModel(
     val poiId: String,

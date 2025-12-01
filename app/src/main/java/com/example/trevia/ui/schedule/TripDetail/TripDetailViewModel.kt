@@ -1,7 +1,6 @@
-package com.example.trevia.ui.schedule
+package com.example.trevia.ui.schedule.TripDetail
 
 import android.util.Log
-import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +17,6 @@ import com.example.trevia.domain.amap.model.toLocationTipUiState
 import com.example.trevia.domain.schedule.model.EventModel
 import com.example.trevia.domain.schedule.usecase.AddEventUseCase
 import com.example.trevia.domain.schedule.usecase.DeleteEventByIdUseCase
-import com.example.trevia.utils.toTimeString
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -159,15 +157,12 @@ class TripDetailViewModel @Inject constructor(
         .distinctUntilChanged()          // 相同关键词不重复请求
         .flatMapLatest { keyword ->
             flow {
-                Log.d("SearchVM", "Request tips for: $keyword")
                 val location = if (tripDetailUiState.value is TripDetailUiState.Success)
                     (tripDetailUiState.value as TripDetailUiState.Success).tripLocation
                 else ""
                 val result = getInputTipsUseCase(keyword, location)
-                Log.d("SearchVM", "Result: $result")
                 emit(result)
             }.catch { e ->
-                Log.e("SearchVM", "Error fetching tips", e)
                 emit(emptyList())
             } // 出错显示空列表
         }.map { tipList -> tipList.map { tip -> tip.toLocationTipUiState() } }
@@ -176,7 +171,6 @@ class TripDetailViewModel @Inject constructor(
     // 当用户输入变化时调用
     fun onKeywordChanged(newKeyword: String)
     {
-        Log.d("SearchVM", "Keyword changed: $newKeyword")
         _keyword.value = newKeyword
     }
     //endregion
