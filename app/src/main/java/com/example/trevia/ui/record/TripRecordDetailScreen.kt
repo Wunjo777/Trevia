@@ -1,9 +1,11 @@
 package com.example.trevia.ui.record
 
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,13 +31,16 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import coil3.compose.AsyncImage
 import com.example.trevia.R
+import com.example.trevia.ui.imgupload.ImgUploadUiState
 import com.example.trevia.ui.imgupload.ImgUploadViewModel
 import com.example.trevia.ui.schedule.TripDetail.DayWithEventsUiState
 import com.example.trevia.ui.schedule.TripDetail.EventUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailViewModel
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun TripRecordDetailScreen(
     navigateBack: () -> Unit,
@@ -45,12 +50,13 @@ fun TripRecordDetailScreen(
 )
 {
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()
+    val imgUploadUiState by imgUploadViewModel.imgUploadUiState.collectAsState()
+
     //创建用于选择图片的 Launcher
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = PickMultipleVisualMedia(maxImgSelection),
     ) { uris ->
-        { imgUploadViewModel.onImageSelected(uris) }
-
+        imgUploadViewModel.onImageSelected(uris)
     }
 
     Scaffold(
@@ -86,18 +92,35 @@ fun TripRecordDetailScreen(
 
             is TripDetailUiState.Success ->
             {
-                val days = (tripDetailUiState as TripDetailUiState.Success).days
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(contentPadding)
-                )
-                {
-                    items(items = days, key = { day -> day.dayId })
-                    { day ->
-                        DayItem(day)
-                    }
-                }
+                TestImgShower(imgUploadUiState, modifier = Modifier.padding(contentPadding))
+//                val days = (tripDetailUiState as TripDetailUiState.Success).days
+//                LazyColumn(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(contentPadding)
+//                )
+//                {
+//                    items(items = days, key = { day -> day.dayId })
+//                    { day ->
+//                        DayItem(day)
+//                    }
+//                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TestImgShower(imgUploadUiState: ImgUploadUiState, modifier: Modifier = Modifier)
+{
+    LazyRow(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        items(imgUploadUiState.thumbnailUris) { uri ->
+            Card(
+                modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
+            ) {
+                AsyncImage(model = uri, contentDescription = null)
             }
         }
     }

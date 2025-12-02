@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.trevia.data.schedule.DayDao
 import com.example.trevia.data.schedule.EventDao
+import com.example.trevia.data.schedule.PhotoDao
 import com.example.trevia.data.schedule.ScheduleDatabase
 import com.example.trevia.data.schedule.TripDao
 import dagger.Module
@@ -49,5 +50,12 @@ object DatabaseModule
     fun provideEventDao(db: ScheduleDatabase): EventDao
     {
         return db.eventDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePhotoDao(db: ScheduleDatabase): PhotoDao
+    {
+        return db.photoDao()
     }
 }
