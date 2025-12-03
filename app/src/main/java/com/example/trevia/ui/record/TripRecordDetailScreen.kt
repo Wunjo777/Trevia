@@ -1,18 +1,26 @@
 package com.example.trevia.ui.record
 
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,11 +35,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
 import com.example.trevia.R
 import com.example.trevia.ui.imgupload.ImgUploadUiState
 import com.example.trevia.ui.imgupload.ImgUploadViewModel
@@ -92,7 +103,10 @@ fun TripRecordDetailScreen(
 
             is TripDetailUiState.Success ->
             {
-                TestImgShower(imgUploadUiState, modifier = Modifier.padding(contentPadding))
+                EventThumbnailsGrid(
+                    thumbnails = imgUploadUiState.thumbnailUris,
+                    modifier = Modifier.padding(contentPadding)
+                )
 //                val days = (tripDetailUiState as TripDetailUiState.Success).days
 //                LazyColumn(
 //                    modifier = Modifier
@@ -105,22 +119,6 @@ fun TripRecordDetailScreen(
 //                        DayItem(day)
 //                    }
 //                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TestImgShower(imgUploadUiState: ImgUploadUiState, modifier: Modifier = Modifier)
-{
-    LazyRow(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        items(imgUploadUiState.thumbnailUris) { uri ->
-            Card(
-                modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
-            ) {
-                AsyncImage(model = uri, contentDescription = null)
             }
         }
     }
@@ -168,10 +166,37 @@ fun EventItem(event: EventUiState, onClick: (Long) -> Unit)
             Text(event.location, style = MaterialTheme.typography.titleMedium)
             Text(event.address, style = MaterialTheme.typography.bodyMedium)
             Text(event.timeRange, style = MaterialTheme.typography.bodyMedium)
-            // TODO: 添加一行LazyRow显示缩略图
+            // TODO: 添加显示缩略图
         }
     }
 }
+
+@Composable
+fun EventThumbnailsGrid(thumbnails: List<Uri>, modifier: Modifier = Modifier)
+{
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(5), // 每行5张
+        modifier = modifier
+            .fillMaxWidth()
+            .height(600.dp), // 控制最大高度
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        items(thumbnails) { thumbnail ->
+            AsyncImage(
+                model = thumbnail,
+                placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
+                error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .aspectRatio(1f) // 保证正方形
+                    .fillMaxWidth()
+            )
+        }
+    }
+}
+
 
 @Composable
 fun AddPhotoButton(onClick: () -> Unit)

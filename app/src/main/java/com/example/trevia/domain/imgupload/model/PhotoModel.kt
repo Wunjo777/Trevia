@@ -4,7 +4,7 @@ import com.example.trevia.data.schedule.Photo
 
 data class PhotoModel(
     val id: Long = 0,
-    val largeImgPath: String,
+    val largeImgPath: String="",
     val thumbnailPath: String,
     val uploadedToServer: Boolean
 )

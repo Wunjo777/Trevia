@@ -11,12 +11,13 @@ import androidx.annotation.RequiresApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-class GenerateSquareThumbnailUseCase @Inject constructor(
-    @ApplicationContext private val context: Context
+class CreateSquareThumbnailUseCase @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val saveImgFileUseCase: SaveImgFileUseCase
 ) {
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    suspend operator fun invoke(uri: Uri, width: Int): Bitmap {
+    suspend operator fun invoke(uri: Uri, width: Int,fileName:String,compressQuality: Int = 80): Uri {
         return try {
             // Step 1: 使用 loadThumbnail 快速获取小图，避免直接 decode 原图
             val rawBitmap = context.contentResolver.loadThumbnail(uri, Size(width, width), null)
@@ -40,7 +41,7 @@ class GenerateSquareThumbnailUseCase @Inject constructor(
                 "Final square thumbnail: ${finalBitmap.width}x${finalBitmap.height}"
             )
 
-            finalBitmap
+            saveImgFileUseCase(finalBitmap, fileName, compressQuality = compressQuality)
         } catch (e: Exception) {
             throw Exception("Failed to generate thumbnail for Uri: $uri", e)
         }

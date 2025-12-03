@@ -19,7 +19,7 @@ interface TripDao
     @Delete
     suspend fun delete(trip: Trip)
 
-    @Query("SELECT * from trips ORDER BY id ASC")
+    @Query("SELECT * from trips")
     fun getAllTrips(): Flow<List<Trip>>
 
     @Query("DELETE FROM trips WHERE id = :tripId")

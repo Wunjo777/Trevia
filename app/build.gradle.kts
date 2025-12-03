@@ -54,9 +54,10 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.foundation.layout)
     implementation("androidx.navigation:navigation-compose:2.8.5")
-    implementation(files("libs/AMap3d_Lite.aar"))
+    implementation(files("libs/AMap3d_Lite.aar"))//AMap SDK
     implementation("androidx.compose.material:material-icons-extended")
-    implementation(libs.androidx.material3)//AMap SDK
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.hilt.common)
     //Room
     val room_version = "2.8.3"
     implementation("androidx.room:room-runtime:$room_version")
@@ -65,13 +66,16 @@ dependencies {
     //Hilt
     implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
     implementation("com.google.dagger:hilt-android:2.57.1")
+    implementation("androidx.hilt:hilt-work:1.3.0")
     ksp("com.google.dagger:hilt-android-compiler:2.57.1")
+    ksp("androidx.hilt:hilt-compiler:1.3.0")
     //Coil
     implementation("io.coil-kt.coil3:coil-compose:3.0.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.0")
     // WorkManager dependency
     implementation("androidx.work:work-runtime-ktx:2.8.1")
-
+    //EXIF
+    implementation("androidx.exifinterface:exifinterface:1.4.1")
 
     testImplementation(libs.junit)
 

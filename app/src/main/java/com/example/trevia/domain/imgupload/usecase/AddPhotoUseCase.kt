@@ -10,11 +10,10 @@ class AddPhotoUseCase @Inject constructor(
     private val photoRepository: PhotoRepository
 )
 {
-    suspend operator fun invoke(photoModel: PhotoModel)
+    suspend operator fun invoke(photoModel: PhotoModel): Long
     {
         // 文件必须存在
-        require(File(photoModel.largeImgPath).exists()) { "Large image file does not exist" }
         require(File(photoModel.thumbnailPath).exists()) { "Thumbnail file does not exist" }
-        photoRepository.addPhoto(photoModel)
+        return photoRepository.addPhoto(photoModel)
     }
 }
