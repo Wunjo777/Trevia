@@ -132,7 +132,7 @@ fun LocationSearchContent(
     onAddEventChange: (Boolean) -> Unit,
     onKeywordChanged: (String) -> Unit,
     keyword: String,
-    onTipClick: (tripId: Long, dayId: Long, locationName: String, address: String) -> Unit,
+    onTipClick: ( dayId: Long, locationName: String, address: String) -> Unit,
     tips: List<LocationTipUiState>,
 )
 {
@@ -152,7 +152,7 @@ fun LocationSearchContent(
             keyword = keyword,
             tips = tips,
             onTipClick = { locationName, address ->
-                onTipClick(tripId, dayId, locationName, address)
+                onTipClick(dayId, locationName, address)
             },
             modifier = Modifier.align(
                 Alignment.BottomCenter

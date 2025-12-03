@@ -6,7 +6,6 @@ import java.time.LocalTime
 
 data class EventModel(
     val id: Long=0,
-    val tripId: Long,
     val dayId: Long,
     val location: String,
     val address:String,
@@ -19,7 +18,6 @@ fun EventModel.toEvent(): Event
 {
     return Event(
         id = this.id,
-        tripId = this.tripId,
         dayId = this.dayId,
         location = this.location,
         address = this.address,
