@@ -12,7 +12,9 @@ class TipRepository @Inject constructor(private val aMapService: AMapService)
                 tip.poiID,
                 tip.name,
                 tip.district,
-                tip.address
+                tip.address,
+                tip.point.latitude,
+                tip.point.longitude
             )
         }
     }

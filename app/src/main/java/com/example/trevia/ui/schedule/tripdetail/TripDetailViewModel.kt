@@ -1,6 +1,9 @@
 package com.example.trevia.ui.schedule.TripDetail
 
+import android.net.Uri
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,9 +17,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.example.trevia.domain.amap.model.toLocationTipUiState
+import com.example.trevia.domain.imgupload.model.PhotoModel
+import com.example.trevia.domain.imgupload.usecase.AddPhotoUseCase
+import com.example.trevia.domain.imgupload.usecase.ClassifyPhotoUseCase
+import com.example.trevia.domain.imgupload.usecase.CreateSquareThumbnailUseCase
+import com.example.trevia.domain.imgupload.usecase.ParseExifUseCase
 import com.example.trevia.domain.schedule.model.EventModel
 import com.example.trevia.domain.schedule.usecase.AddEventUseCase
 import com.example.trevia.domain.schedule.usecase.DeleteEventByIdUseCase
+import com.example.trevia.work.TaskScheduler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,6 +41,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalTime
+import kotlin.collections.forEach
+import com.example.trevia.domain.imgupload.usecase.DaySummary
+import com.example.trevia.domain.imgupload.usecase.EventSummary
+import com.example.trevia.utils.strToIsoLocalDate
 
 @HiltViewModel
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -39,7 +53,12 @@ class TripDetailViewModel @Inject constructor(
     getTripWithDaysAndEventsUseCase: GetTripWithDaysAndEventsUseCase,
     getInputTipsUseCase: GetInputTipsUseCase,
     private val addEventUseCase: AddEventUseCase,
-    private val deleteEventByIdUseCase: DeleteEventByIdUseCase
+    private val deleteEventByIdUseCase: DeleteEventByIdUseCase,
+    private val parseExifUseCase: ParseExifUseCase,
+    private val createSquareThumbnailUseCase: CreateSquareThumbnailUseCase,
+    private val addPhotoUseCase: AddPhotoUseCase,
+    private val classifyPhotoUseCase: ClassifyPhotoUseCase,
+    private val taskScheduler: TaskScheduler
 ) : ViewModel()
 {
     companion object
@@ -53,7 +72,8 @@ class TripDetailViewModel @Inject constructor(
     private val _selectedDayId = MutableStateFlow<Long?>(null)
     val selectedDayId: StateFlow<Long?> = _selectedDayId
 
-    fun onSelectedDayChange(dayId: Long?) {
+    fun onSelectedDayChange(dayId: Long?)
+    {
         _selectedDayId.value = dayId
     }
 
@@ -112,6 +132,21 @@ class TripDetailViewModel @Inject constructor(
             "$startStr ~ $endStr"
         }
     }
+
+    fun parseTimeRange(timeRange: String?): Pair<LocalTime?, LocalTime?>
+    {
+        return timeRange?.split(" ~ ")
+            ?.takeIf { it.size == 2 }
+            ?.let {
+                try
+                {
+                    Pair(LocalTime.parse(it[0]), LocalTime.parse(it[1]))
+                } catch (e: Exception)
+                {
+                    null
+                }
+            } ?: Pair(null, null)
+    }
     //endregion
 
     fun addEventByLocation(
@@ -134,11 +169,11 @@ class TripDetailViewModel @Inject constructor(
 
     }
 
-     fun deleteEventById(eventId: Long)
+    fun deleteEventById(eventId: Long)
     {
-         viewModelScope.launch {
-             deleteEventByIdUseCase(eventId)
-         }
+        viewModelScope.launch {
+            deleteEventByIdUseCase(eventId)
+        }
     }
 
     //region 弹出TipList
@@ -169,6 +204,68 @@ class TripDetailViewModel @Inject constructor(
     fun onKeywordChanged(newKeyword: String)
     {
         _keyword.value = newKeyword
+    }
+    //endregion
+
+    //region 上传图片
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun onImageSelected(uris: List<Uri>)
+    {
+        if (tripDetailUiState.value !is TripDetailUiState.Success) return
+
+        val dayList = (tripDetailUiState.value as TripDetailUiState.Success).days.map {
+            DaySummary(
+                dayId = it.dayId,
+                date = it.date.strToIsoLocalDate()
+            )
+        }
+
+        val eventList = (tripDetailUiState.value as TripDetailUiState.Success).days.flatMap { day ->
+            day.events.map { event ->
+                val (start, end) = parseTimeRange(event.timeRange)
+                EventSummary(
+                    eventId = event.eventId,
+                    dayId = day.dayId,
+                    startTime = start,
+                    endTime = end,
+                    latitude = null,      // 目前你没有 event 经纬度字段
+                    longitude = null
+                )
+            }
+        }
+        uris.forEach { uri ->
+            viewModelScope.launch(Dispatchers.IO) {
+                val exifData = parseExifUseCase(uri)
+
+                val classificationResult = classifyPhotoUseCase(exifData, dayList, eventList)
+
+                // ---------- 1. 文件名生成 ----------
+                val uriHash = kotlin.math.abs(uri.toString().hashCode())
+                val uuid = java.util.UUID.randomUUID().toString()
+                val baseName = "img_${uriHash}_$uuid"
+                val thumbFilename = "${baseName}_thumb.jpg"
+                val largeFilename = "${baseName}_large.jpg"
+
+                // ---------- 2. 生成缩略图 ----------
+                val savedThumbUri = createSquareThumbnailUseCase(uri, 200, thumbFilename, 80)
+
+                // ---------- 3. 写入数据库（返回 photoId） ----------
+                val photoId = addPhotoUseCase(
+                    PhotoModel(
+                        thumbnailPath = savedThumbUri.path.toString(),
+                        uploadedToServer = false
+                    )
+                )
+                // ---------- 4. 调度创建大图的 Worker （异步） ----------
+                taskScheduler.scheduleCreateAndAddLargeImg(
+                    uri = uri,
+                    photoId = photoId,
+                    fileName = largeFilename,
+                    compressQuality = 80,
+                    maxSize = 1280
+                )
+            }
+        }
     }
     //endregion
 }
@@ -206,5 +303,7 @@ data class EventUiState(
 data class LocationTipUiState(
     val tipId: String = "",
     val name: String = "",
-    val address: String = ""
+    val address: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

@@ -44,8 +44,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.compose.rememberAsyncImagePainter
 import com.example.trevia.R
-import com.example.trevia.ui.imgupload.ImgUploadUiState
-import com.example.trevia.ui.imgupload.ImgUploadViewModel
 import com.example.trevia.ui.schedule.TripDetail.DayWithEventsUiState
 import com.example.trevia.ui.schedule.TripDetail.EventUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailUiState
@@ -56,18 +54,16 @@ import com.example.trevia.ui.schedule.TripDetail.TripDetailViewModel
 fun TripRecordDetailScreen(
     navigateBack: () -> Unit,
     tripDetailViewModel: TripDetailViewModel = hiltViewModel(),
-    imgUploadViewModel: ImgUploadViewModel = hiltViewModel(),
     maxImgSelection: Int = 2
 )
 {
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()
-    val imgUploadUiState by imgUploadViewModel.imgUploadUiState.collectAsState()
 
     //创建用于选择图片的 Launcher
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = PickMultipleVisualMedia(maxImgSelection),
     ) { uris ->
-        imgUploadViewModel.onImageSelected(uris)
+        tripDetailViewModel.onImageSelected(uris)
     }
 
     Scaffold(
@@ -103,10 +99,6 @@ fun TripRecordDetailScreen(
 
             is TripDetailUiState.Success ->
             {
-                EventThumbnailsGrid(
-                    thumbnails = imgUploadUiState.thumbnailUris,
-                    modifier = Modifier.padding(contentPadding)
-                )
 //                val days = (tripDetailUiState as TripDetailUiState.Success).days
 //                LazyColumn(
 //                    modifier = Modifier
