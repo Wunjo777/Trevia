@@ -24,4 +24,7 @@ interface PhotoDao
 
     @Query("SELECT * FROM photos")
     fun getAllPhotos(): Flow<List<Photo>>
+
+    @Query("SELECT * FROM photos WHERE tripId = :tripId")
+    fun getPhotosByTripId(tripId: Long): Flow<List<Photo>>
 }

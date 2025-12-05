@@ -1,5 +1,6 @@
 package com.example.trevia.ui.record
 
+import android.app.Notification
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -7,21 +8,27 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -35,15 +42,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
-import coil3.compose.rememberAsyncImagePainter
 import com.example.trevia.R
+import com.example.trevia.ui.imgshow.ImgShowUiState
+import com.example.trevia.ui.imgshow.ImgShowViewModel
+import com.example.trevia.ui.imgshow.PhotoUiState
 import com.example.trevia.ui.schedule.TripDetail.DayWithEventsUiState
 import com.example.trevia.ui.schedule.TripDetail.EventUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailUiState
@@ -54,12 +65,13 @@ import com.example.trevia.ui.schedule.TripDetail.TripDetailViewModel
 fun TripRecordDetailScreen(
     navigateBack: () -> Unit,
     tripDetailViewModel: TripDetailViewModel = hiltViewModel(),
-    maxImgSelection: Int = 2
+    imgShowViewModel: ImgShowViewModel = hiltViewModel(),
+    maxImgSelection: Int = 99
 )
 {
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()
+    val imgShowUiState by imgShowViewModel.imgShowUiState.collectAsState()
 
-    //创建用于选择图片的 Launcher
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = PickMultipleVisualMedia(maxImgSelection),
     ) { uris ->
@@ -71,8 +83,7 @@ fun TripRecordDetailScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
-            )
-            {
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
@@ -81,36 +92,76 @@ fun TripRecordDetailScreen(
             }
         },
         floatingActionButton = {
-            AddPhotoButton(onClick = {
+            AddPhotoButton {
                 pickImageLauncher.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-            })
-        }) { contentPadding ->
+            }
+        }
+    ) { contentPadding ->
+
         when (tripDetailUiState)
         {
-            is TripDetailUiState.Loading ->
-            {
-                Text("NotImplementedYet")
-            }
+            is TripDetailUiState.Loading -> Text("NotImplementedYet")
 
-            is TripDetailUiState.NotFound ->
-            {
-                Text(stringResource(R.string.trip_not_found))
-            }
+            is TripDetailUiState.NotFound -> Text(stringResource(R.string.trip_not_found))
 
             is TripDetailUiState.Success ->
             {
-//                val days = (tripDetailUiState as TripDetailUiState.Success).days
-//                LazyColumn(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(contentPadding)
-//                )
-//                {
-//                    items(items = days, key = { day -> day.dayId })
-//                    { day ->
-//                        DayItem(day)
-//                    }
-//                }
+                val days = (tripDetailUiState as TripDetailUiState.Success).days
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    // 固定的未分类图片
+                    imgShowUiState.groupedPhotos[-1L]?.let { photos ->
+                        UnclassifiedPhotoContent(
+                            photos.map { it.thumbnailPath.toUri() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(contentPadding)
+                        )
+                    }
+
+                    // 滚动的行程天项
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 160.dp),
+                        contentPadding = contentPadding
+                    ) {
+                        items(days, key = { it.dayId }) { day ->
+                            DayItem(day, imgShowUiState.groupedPhotos)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun UnclassifiedPhotoContent(thumbnails: List<Uri>, modifier: Modifier = Modifier)
+{
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(dimensionResource(R.dimen.padding_small))
+    ) {
+        Text("未分类", style = MaterialTheme.typography.titleMedium)
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            items(thumbnails)
+            { uri ->
+                AsyncImage(
+                    model = uri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(dimensionResource(R.dimen.padding_small))
+                )
             }
         }
     }
@@ -119,8 +170,10 @@ fun TripRecordDetailScreen(
 @Composable
 fun DayItem(
     day: DayWithEventsUiState,
+    groupedPhotos: Map<Long, List<PhotoUiState>>
 )
 {
+    val pagerState = rememberPagerState(pageCount = { day.events.size })
     Column(
         modifier = Modifier
             .padding(dimensionResource(R.dimen.padding_small))
@@ -132,22 +185,28 @@ fun DayItem(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
         )
-        LazyRow(modifier = Modifier.fillMaxWidth())
-        {
-            items(items = day.events, key = { event -> event.eventId })
-            { event ->
-                EventItem(event, onClick = {})
-            }
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) { page ->
+            val currentEvent = day.events[page]
+            EventItem(
+                currentEvent,
+                groupedPhotos[currentEvent.eventId]?.map { it.thumbnailPath.toUri() }
+                    ?: emptyList(),
+                onClick = {})
         }
     }
 }
 
 @Composable
-fun EventItem(event: EventUiState, onClick: (Long) -> Unit)
+fun EventItem(event: EventUiState, thumbnails: List<Uri>, onClick: (Long) -> Unit)
 {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(300.dp)
             .clickable { onClick(event.eventId) })
     {
         Column(
@@ -158,16 +217,24 @@ fun EventItem(event: EventUiState, onClick: (Long) -> Unit)
             Text(event.location, style = MaterialTheme.typography.titleMedium)
             Text(event.address, style = MaterialTheme.typography.bodyMedium)
             Text(event.timeRange, style = MaterialTheme.typography.bodyMedium)
-            // TODO: 添加显示缩略图
+
+            if (thumbnails.isEmpty())
+            {
+                Text("添加照片")
+            }
+            else
+            {
+                ThumbnailsGrid(thumbnails)
+            }
         }
     }
 }
 
 @Composable
-fun EventThumbnailsGrid(thumbnails: List<Uri>, modifier: Modifier = Modifier)
+fun ThumbnailsGrid(thumbnails: List<Uri>, modifier: Modifier = Modifier)
 {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(5), // 每行5张
+        columns = GridCells.Fixed(4), // 每行5张
         modifier = modifier
             .fillMaxWidth()
             .height(600.dp), // 控制最大高度
@@ -183,7 +250,13 @@ fun EventThumbnailsGrid(thumbnails: List<Uri>, modifier: Modifier = Modifier)
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .aspectRatio(1f) // 保证正方形
-                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.padding_small)).pointerInput(Unit) {
+                        detectTapGestures(
+                            onLongPress = {
+                                onActionSelected(Notification.Action.ShowMenu, thumbnail)
+                            }
+                        )
+                    }
             )
         }
     }

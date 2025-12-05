@@ -3,10 +3,11 @@ package com.example.trevia.domain.imgupload.usecase
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
+import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.*
 
-class ClassifyPhotoUseCase
+class ClassifyPhotoUseCase @Inject constructor()
 {
     companion object
     {
@@ -19,7 +20,7 @@ class ClassifyPhotoUseCase
         exifData: ExifData,
         days: List<DaySummary>,
         events: List<EventSummary>
-    ): ImageClassificationResult
+    ): Long?
     {
 
         val exifDate = exifData.dateTaken
@@ -33,13 +34,13 @@ class ClassifyPhotoUseCase
         }
         val dayId = matchedDay?.dayId
 
-        if (dayId == null) return ImageClassificationResult(null, null)
+        if (dayId == null) return null
 
         // ---------- 2. 分类 Event ----------
         val eventsOfDay = events.filter { it.dayId == dayId }
 
         if (eventsOfDay.isEmpty())
-            return ImageClassificationResult(dayId, null)
+            return null
 
         // Step 1：时间候选（如果 exifTime 为空，则跳过时间匹配）
         val timeCandidates =
@@ -57,7 +58,7 @@ class ClassifyPhotoUseCase
         // Step 2：只有一个时间匹配 → 直接返回
         if (timeCandidates.size == 1)
         {
-            return ImageClassificationResult(dayId, timeCandidates.first().eventId)
+            return timeCandidates.first().eventId
         }
 
         // Step 3：多个时间匹配 → 用地理位置排序
@@ -71,7 +72,7 @@ class ClassifyPhotoUseCase
                     val mid = start.plusSeconds(Duration.between(start, end).seconds / 2)
                     abs(Duration.between(mid, exifTime).toMinutes())
                 }
-                return ImageClassificationResult(dayId, best?.eventId)
+                return best?.eventId
             }
             val best = timeCandidates.minByOrNull { event ->
                 distance(
@@ -80,7 +81,7 @@ class ClassifyPhotoUseCase
                     event.longitude ?: exifLng
                 )
             }
-            return ImageClassificationResult(dayId, best?.eventId)
+            return best?.eventId
         }
 
         // Step 4：没有时间候选 → fallback：使用地理位置匹配
@@ -105,12 +106,12 @@ class ClassifyPhotoUseCase
                         event.longitude!!
                     )
                 }
-                return ImageClassificationResult(dayId, best?.eventId)
+                return best?.eventId
             }
         }
 
-        // Step 5：完全无法分类 event，则返回 day 但 event = null
-        return ImageClassificationResult(dayId, null)
+        // Step 5：完全无法分类 event，则返回 event = null
+        return null
     }
 
 
@@ -125,11 +126,6 @@ class ClassifyPhotoUseCase
 
 
 // ----------------- 数据模型 ------------------
-
-data class ImageClassificationResult(
-    val dayId: Long?,
-    val eventId: Long?
-)
 
 data class DaySummary(
     val dayId: Long,

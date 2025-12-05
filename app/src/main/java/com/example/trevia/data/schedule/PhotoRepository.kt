@@ -15,4 +15,7 @@ class PhotoRepository @Inject constructor(private val photoDao: PhotoDao)
 
     fun getAllPhotosStream(): Flow<List<PhotoModel>> =
         photoDao.getAllPhotos().map { photos -> photos.map { it.toPhotoModel() } }
+
+    fun getPhotosByTripIdStream(tripId: Long): Flow<List<PhotoModel>> =
+        photoDao.getPhotosByTripId(tripId).map { photos -> photos.map { it.toPhotoModel() } }
 }

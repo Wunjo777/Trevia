@@ -66,7 +66,7 @@ class TripDetailViewModel @Inject constructor(
         private const val TIMEOUT_MILLIS = 5_000L
     }
 
-    private val currentTripId: Long =
+    private val _currentTripId: Long =
         checkNotNull(savedStateHandle[TripDetailsDestination.TRIP_ID_ARG])
 
     private val _selectedDayId = MutableStateFlow<Long?>(null)
@@ -79,7 +79,7 @@ class TripDetailViewModel @Inject constructor(
 
     //region 创建TripDetailUiState
     val tripDetailUiState: StateFlow<TripDetailUiState> =
-        getTripWithDaysAndEventsUseCase(currentTripId)
+        getTripWithDaysAndEventsUseCase(_currentTripId)
             .map { trip ->
                 trip?.toUiState() ?: TripDetailUiState.NotFound
             }
@@ -237,7 +237,7 @@ class TripDetailViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.IO) {
                 val exifData = parseExifUseCase(uri)
 
-                val classificationResult = classifyPhotoUseCase(exifData, dayList, eventList)
+                val classifiedEventId = classifyPhotoUseCase(exifData, dayList, eventList)
 
                 // ---------- 1. 文件名生成 ----------
                 val uriHash = kotlin.math.abs(uri.toString().hashCode())
@@ -252,6 +252,8 @@ class TripDetailViewModel @Inject constructor(
                 // ---------- 3. 写入数据库（返回 photoId） ----------
                 val photoId = addPhotoUseCase(
                     PhotoModel(
+                        tripId = _currentTripId,
+                        eventId = classifiedEventId,
                         thumbnailPath = savedThumbUri.path.toString(),
                         uploadedToServer = false
                     )
