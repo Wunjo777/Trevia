@@ -41,8 +41,7 @@ import com.example.trevia.domain.amap.model.toLocationTipUiState
 fun TripDetailScreen(
     navigateBack: () -> Unit,
     navigateToEditEvent: (Long) -> Unit,
-    tripDetailViewModel: TripDetailViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    tripDetailViewModel: TripDetailViewModel = hiltViewModel()
 )
 {
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()

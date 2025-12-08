@@ -228,7 +228,7 @@ class TripDetailViewModel @Inject constructor(
                     dayId = day.dayId,
                     startTime = start,
                     endTime = end,
-                    latitude = null,      // 目前你没有 event 经纬度字段
+                    latitude = null,      // TODO: 从tips给event添加经纬度
                     longitude = null
                 )
             }

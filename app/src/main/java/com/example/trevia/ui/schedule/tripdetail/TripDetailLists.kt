@@ -119,6 +119,7 @@ fun EventItem(event: EventUiState, onClick: (Long) -> Unit)
             Text(event.location, style = MaterialTheme.typography.titleMedium)
             Text(event.address, style = MaterialTheme.typography.bodyMedium)
             Text(event.timeRange, style = MaterialTheme.typography.bodyMedium)
+            Text(event.description, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

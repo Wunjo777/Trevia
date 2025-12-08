@@ -8,40 +8,50 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
@@ -52,13 +62,18 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.example.trevia.R
-import com.example.trevia.ui.imgshow.ImgShowUiState
+import com.example.trevia.ui.imgshow.DragMode
+import com.example.trevia.ui.imgshow.ImgSelectionEvent
+import com.example.trevia.ui.imgshow.ImgSelectionState
 import com.example.trevia.ui.imgshow.ImgShowViewModel
 import com.example.trevia.ui.imgshow.PhotoUiState
 import com.example.trevia.ui.schedule.TripDetail.DayWithEventsUiState
 import com.example.trevia.ui.schedule.TripDetail.EventUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailViewModel
+import com.example.trevia.ui.utils.BottomMenuItem
+import com.example.trevia.ui.utils.BottomSheetMenu
+
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
@@ -71,6 +86,10 @@ fun TripRecordDetailScreen(
 {
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()
     val imgShowUiState by imgShowViewModel.imgShowUiState.collectAsState()
+    val imgSelectionState by remember { imgShowViewModel.imgSelectionState }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var showEventSelectSheet by remember { mutableStateOf(false) }
+
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = PickMultipleVisualMedia(maxImgSelection),
@@ -80,14 +99,49 @@ fun TripRecordDetailScreen(
 
     Scaffold(
         topBar = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
-            ) {
+            if (imgSelectionState.enabled)
+            {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // 进入选择模式时显示 “叉号”
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Exit Selection",
+                        modifier = Modifier
+                            .clickable {
+                                imgShowViewModel.imgSelectionEventHandler(ImgSelectionEvent.ExitSelection)
+                            }
+                            .padding(dimensionResource(R.dimen.padding_small))
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.selected_count,
+                            imgSelectionState.selectedIds.size
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
+                    )
+                    Text(
+                        text = stringResource(R.string.confirm),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .clickable {
+                                showBottomSheet = true
+                            }
+                            .padding(dimensionResource(R.dimen.padding_small))
+                    )
+                }
+            }
+            else
+            {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
-                    modifier = Modifier.clickable { navigateBack() }
+                    modifier = Modifier
+                        .clickable { navigateBack() }
+                        .padding(dimensionResource(R.dimen.padding_small))
                 )
             }
         },
@@ -97,7 +151,6 @@ fun TripRecordDetailScreen(
             }
         }
     ) { contentPadding ->
-
         when (tripDetailUiState)
         {
             is TripDetailUiState.Loading -> Text("NotImplementedYet")
@@ -113,25 +166,121 @@ fun TripRecordDetailScreen(
                         .fillMaxSize()
                 ) {
                     // 固定的未分类图片
-                    imgShowUiState.groupedPhotos[-1L]?.let { photos ->
+                    val unclassifiedPhotos = imgShowUiState.groupedPhotos[-1L]
+                    val hasUnclassified = !unclassifiedPhotos.isNullOrEmpty()
+                    if (hasUnclassified)
+                    {
                         UnclassifiedPhotoContent(
-                            photos.map { it.thumbnailPath.toUri() },
+                            thumbnails = unclassifiedPhotos,
+                            imgSelectedIds = imgSelectionState.selectedIds,
+                            imgSelectionEnabled = imgSelectionState.enabled,
+                            onEvent = imgShowViewModel::imgSelectionEventHandler,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(contentPadding)
+                                .statusBarsPadding()
                         )
                     }
+
 
                     // 滚动的行程天项
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(top = 160.dp),
+                            .padding(top = if (hasUnclassified) 160.dp else 30.dp),
                         contentPadding = contentPadding
                     ) {
                         items(days, key = { it.dayId }) { day ->
-                            DayItem(day, imgShowUiState.groupedPhotos)
+                            DayItem(
+                                day,
+                                imgShowUiState.groupedPhotos,
+                                imgSelectionState.selectedIds,
+                                imgSelectionState.enabled,
+                                imgShowViewModel::imgSelectionEventHandler
+                            )
                         }
+                    }
+                }
+
+                if (showBottomSheet)
+                {
+                    BottomSheetMenu(
+                        onDismissRequest = { showBottomSheet = false },
+                        menuItems = listOf(
+                            BottomMenuItem(
+                                title = "删除",
+                                onClick = {
+                                    imgShowViewModel.deleteSelectedPhoto()
+                                    imgShowViewModel.imgSelectionEventHandler(ImgSelectionEvent.ExitSelection)
+                                }
+                            ),
+                            BottomMenuItem(
+                                title = "移动到",
+                                onClick = {
+                                    showBottomSheet = false
+                                    showEventSelectSheet = true
+                                }
+                            )
+                        )
+                    )
+                }
+
+                if (showEventSelectSheet)
+                {
+                    EventSelectBottomSheet(
+                        days = days,
+                        onDismissRequest = { showEventSelectSheet = false },
+                        onEventSelected = { eventId ->
+                            imgShowViewModel.moveSelectedPhotosToEvent(eventId)
+                            imgShowViewModel.imgSelectionEventHandler(ImgSelectionEvent.ExitSelection)
+                            showEventSelectSheet = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EventSelectBottomSheet(
+    days: List<DayWithEventsUiState>,
+    onDismissRequest: () -> Unit,
+    onEventSelected: (Long) -> Unit
+)
+{
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+
+            Text(
+                text = "选择事件",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            days.forEach { day ->
+                day.events.forEach { event ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onEventSelected(event.eventId) }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = day.date + ": ",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = event.location,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                     }
                 }
             }
@@ -139,9 +288,14 @@ fun TripRecordDetailScreen(
     }
 }
 
-
 @Composable
-fun UnclassifiedPhotoContent(thumbnails: List<Uri>, modifier: Modifier = Modifier)
+fun UnclassifiedPhotoContent(
+    thumbnails: List<PhotoUiState>,
+    imgSelectedIds: Set<Long>,
+    imgSelectionEnabled: Boolean,
+    onEvent: (ImgSelectionEvent) -> Unit,
+    modifier: Modifier = Modifier
+)
 {
     Column(
         modifier = modifier
@@ -152,16 +306,53 @@ fun UnclassifiedPhotoContent(thumbnails: List<Uri>, modifier: Modifier = Modifie
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            items(thumbnails)
-            { uri ->
-                AsyncImage(
-                    model = uri,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+            itemsIndexed(thumbnails)
+            { index, thumbnail ->
+                val isSelected = imgSelectedIds.contains(thumbnail.photoId)
+                Box(
                     modifier = Modifier
                         .size(80.dp)
+                        .aspectRatio(1f)
                         .padding(dimensionResource(R.dimen.padding_small))
-                )
+                        .pointerInput(thumbnail.photoId)
+                        {
+                            detectTapGestures(
+                                onLongPress = {
+                                    onEvent(
+                                        ImgSelectionEvent.EnterSelectionModeAndSelect(thumbnail.photoId)
+                                    )
+                                },
+                                onTap = {
+                                    if (imgSelectionEnabled)
+                                    {
+                                        onEvent(ImgSelectionEvent.Toggle(thumbnail.photoId))
+                                    }
+                                    else
+                                    {
+                                        // 非选择模式下，可进入大图预览 (可选)
+                                    }
+                                }
+                            )
+                        }) {
+                    AsyncImage(
+                        model = thumbnail.thumbnailPath.toUri(),
+                        placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
+                        error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+                    //图片选中遮罩
+                    if (isSelected)
+                    {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.White.copy(alpha = 0.5f))
+                        )
+                    }
+                }
             }
         }
     }
@@ -170,7 +361,10 @@ fun UnclassifiedPhotoContent(thumbnails: List<Uri>, modifier: Modifier = Modifie
 @Composable
 fun DayItem(
     day: DayWithEventsUiState,
-    groupedPhotos: Map<Long, List<PhotoUiState>>
+    groupedPhotos: Map<Long, List<PhotoUiState>>,
+    imgSelectedIds: Set<Long>,
+    imgSelectionEnabled: Boolean,
+    onEvent: (ImgSelectionEvent) -> Unit,
 )
 {
     val pagerState = rememberPagerState(pageCount = { day.events.size })
@@ -193,21 +387,29 @@ fun DayItem(
             val currentEvent = day.events[page]
             EventItem(
                 currentEvent,
-                groupedPhotos[currentEvent.eventId]?.map { it.thumbnailPath.toUri() }
-                    ?: emptyList(),
-                onClick = {})
+                thumbnails = groupedPhotos[currentEvent.eventId] ?: emptyList(),
+                imgSelectedIds,
+                imgSelectionEnabled,
+                onEvent
+            )
         }
     }
 }
 
 @Composable
-fun EventItem(event: EventUiState, thumbnails: List<Uri>, onClick: (Long) -> Unit)
+fun EventItem(
+    event: EventUiState,
+    thumbnails: List<PhotoUiState>,
+    imgSelectedIds: Set<Long>,
+    imgSelectionEnabled: Boolean,
+    onEvent: (ImgSelectionEvent) -> Unit,
+)
 {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(300.dp)
-            .clickable { onClick(event.eventId) })
+    )
     {
         Column(
             modifier = Modifier
@@ -224,14 +426,25 @@ fun EventItem(event: EventUiState, thumbnails: List<Uri>, onClick: (Long) -> Uni
             }
             else
             {
-                ThumbnailsGrid(thumbnails)
+                ThumbnailsGrid(
+                    thumbnails,
+                    imgSelectedIds,
+                    imgSelectionEnabled,
+                    onEvent
+                )
             }
         }
     }
 }
 
 @Composable
-fun ThumbnailsGrid(thumbnails: List<Uri>, modifier: Modifier = Modifier)
+fun ThumbnailsGrid(
+    thumbnails: List<PhotoUiState>,
+    imgSelectedIds: Set<Long>,
+    imgSelectionEnabled: Boolean,
+    onEvent: (ImgSelectionEvent) -> Unit,
+    modifier: Modifier = Modifier
+)
 {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4), // 每行5张
@@ -242,22 +455,52 @@ fun ThumbnailsGrid(thumbnails: List<Uri>, modifier: Modifier = Modifier)
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items(thumbnails) { thumbnail ->
-            AsyncImage(
-                model = thumbnail,
-                placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
-                error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            val isSelected = imgSelectedIds.contains(thumbnail.photoId)
+
+            Box(
                 modifier = Modifier
-                    .aspectRatio(1f) // 保证正方形
-                    .padding(dimensionResource(R.dimen.padding_small)).pointerInput(Unit) {
+                    .size(80.dp)
+                    .aspectRatio(1f)
+                    .padding(dimensionResource(R.dimen.padding_small))
+                    .pointerInput(thumbnail.photoId)
+                    {
                         detectTapGestures(
                             onLongPress = {
-                                onActionSelected(Notification.Action.ShowMenu, thumbnail)
+                                onEvent(
+                                    ImgSelectionEvent.EnterSelectionModeAndSelect(thumbnail.photoId)
+                                )
+                            },
+                            onTap = {
+                                if (imgSelectionEnabled)
+                                {
+                                    onEvent(ImgSelectionEvent.Toggle(thumbnail.photoId))
+                                }
+                                else
+                                {
+                                    // 非选择模式下，可进入大图预览 (可选)
+                                }
                             }
                         )
-                    }
-            )
+                    }) {
+                AsyncImage(
+                    model = thumbnail.thumbnailPath.toUri(),
+                    placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
+                    error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
+                //图片选中遮罩
+                if (isSelected)
+                {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.White.copy(alpha = 0.5f))
+                    )
+                }
+            }
         }
     }
 }

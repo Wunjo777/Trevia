@@ -7,4 +7,6 @@
     <string name="navigate_back">返回</string>
     <string name="search_location">搜索地点…</string>
     <string name="close">关闭</string>
+    <string name="confirm">确定</string>
+    <string name="selected_count">已选择 %d 项</string>
 </resources>

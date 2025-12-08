@@ -27,4 +27,11 @@ interface PhotoDao
 
     @Query("SELECT * FROM photos WHERE tripId = :tripId")
     fun getPhotosByTripId(tripId: Long): Flow<List<Photo>>
+
+    @Query("DELETE FROM photos WHERE id IN (:ids)")
+    suspend fun deletePhotosByIds(ids: Set<Long>)
+
+    @Query("UPDATE photos SET eventId = :eventId WHERE id IN (:photoIds)")
+    suspend fun updatePhotosEventId(photoIds: Set<Long>, eventId: Long)
+
 }

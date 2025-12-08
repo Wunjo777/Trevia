@@ -1,5 +1,6 @@
 package com.example.trevia.ui.schedule
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,7 +57,8 @@ fun EditEventScreen(
                 onEventInfoChange = editEventViewModel::updateEventInfo,
                 onSaveButtonClick = editEventViewModel::updateEvent,
                 navigateBack = navigateBack,
-                editEventUiState = editEventUiState as EditEventUiState.Success
+                editEventUiState = editEventUiState as EditEventUiState.Success,
+                context= context
             )
         }
     }
@@ -70,12 +72,12 @@ fun EditEventContent(
     onEventInfoChange: (EventInfoUiState.() -> EventInfoUiState) -> Unit,
     onSaveButtonClick: ((Boolean) -> Unit) -> Unit,
     navigateBack: () -> Unit,
-    editEventUiState: EditEventUiState.Success
+    editEventUiState: EditEventUiState.Success,
+    context: Context
 )
 {
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     Scaffold(
         topBar = {
