@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
@@ -73,7 +74,12 @@ import com.example.trevia.ui.schedule.TripDetail.TripDetailUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailViewModel
 import com.example.trevia.ui.utils.BottomMenuItem
 import com.example.trevia.ui.utils.BottomSheetMenu
+import com.example.trevia.ui.utils.FullscreenImageBrowser
 
+data class OpenImagePreview(
+    val imgUris: List<Uri>,
+    val index: Int
+)
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
@@ -89,6 +95,7 @@ fun TripRecordDetailScreen(
     val imgSelectionState by remember { imgShowViewModel.imgSelectionState }
     var showBottomSheet by remember { mutableStateOf(false) }
     var showEventSelectSheet by remember { mutableStateOf(false) }
+    var openImgPreview by remember { mutableStateOf<OpenImagePreview?>(null) }
 
 
     val pickImageLauncher = rememberLauncherForActivityResult(
@@ -171,10 +178,16 @@ fun TripRecordDetailScreen(
                     if (hasUnclassified)
                     {
                         UnclassifiedPhotoContent(
-                            thumbnails = unclassifiedPhotos,
+                            photos = unclassifiedPhotos,
                             imgSelectedIds = imgSelectionState.selectedIds,
                             imgSelectionEnabled = imgSelectionState.enabled,
                             onEvent = imgShowViewModel::imgSelectionEventHandler,
+                            onImgClick = { list, idx ->
+                                openImgPreview = OpenImagePreview(
+                                    imgUris = list,
+                                    index = idx
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .statusBarsPadding()
@@ -195,10 +208,24 @@ fun TripRecordDetailScreen(
                                 imgShowUiState.groupedPhotos,
                                 imgSelectionState.selectedIds,
                                 imgSelectionState.enabled,
-                                imgShowViewModel::imgSelectionEventHandler
+                                imgShowViewModel::imgSelectionEventHandler,
+                                onImgClick = { list, idx ->
+                                    openImgPreview = OpenImagePreview(
+                                        imgUris = list,
+                                        index = idx
+                                    )
+                                }
                             )
                         }
                     }
+                }
+
+                openImgPreview?.let { preview ->
+                    FullscreenImageBrowser(
+                        imageUris = preview.imgUris,
+                        initialIndex = preview.index,
+                        onDismiss = { openImgPreview = null }
+                    )
                 }
 
                 if (showBottomSheet)
@@ -290,10 +317,11 @@ fun EventSelectBottomSheet(
 
 @Composable
 fun UnclassifiedPhotoContent(
-    thumbnails: List<PhotoUiState>,
+    photos: List<PhotoUiState>,
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
+    onImgClick: (List<Uri>, Int) -> Unit,
     modifier: Modifier = Modifier
 )
 {
@@ -306,36 +334,39 @@ fun UnclassifiedPhotoContent(
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            itemsIndexed(thumbnails)
-            { index, thumbnail ->
-                val isSelected = imgSelectedIds.contains(thumbnail.photoId)
+            itemsIndexed(photos)
+            { index, photo ->
+                val isSelected = imgSelectedIds.contains(photo.photoId)
                 Box(
                     modifier = Modifier
                         .size(80.dp)
                         .aspectRatio(1f)
                         .padding(dimensionResource(R.dimen.padding_small))
-                        .pointerInput(thumbnail.photoId)
+                        .pointerInput(photo.photoId)
                         {
                             detectTapGestures(
                                 onLongPress = {
                                     onEvent(
-                                        ImgSelectionEvent.EnterSelectionModeAndSelect(thumbnail.photoId)
+                                        ImgSelectionEvent.EnterSelectionModeAndSelect(photo.photoId)
                                     )
                                 },
                                 onTap = {
                                     if (imgSelectionEnabled)
                                     {
-                                        onEvent(ImgSelectionEvent.Toggle(thumbnail.photoId))
+                                        onEvent(ImgSelectionEvent.Toggle(photo.photoId))
                                     }
                                     else
                                     {
-                                        // 非选择模式下，可进入大图预览 (可选)
+                                        onImgClick(
+                                            photos.map { it.largeImgPath.toUri() },
+                                            index
+                                        )
                                     }
                                 }
                             )
                         }) {
                     AsyncImage(
-                        model = thumbnail.thumbnailPath.toUri(),
+                        model = photo.thumbnailPath.toUri(),
                         placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
                         error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
                         contentDescription = null,
@@ -365,6 +396,7 @@ fun DayItem(
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
+    onImgClick: (List<Uri>, Int) -> Unit,
 )
 {
     val pagerState = rememberPagerState(pageCount = { day.events.size })
@@ -387,10 +419,11 @@ fun DayItem(
             val currentEvent = day.events[page]
             EventItem(
                 currentEvent,
-                thumbnails = groupedPhotos[currentEvent.eventId] ?: emptyList(),
+                photos = groupedPhotos[currentEvent.eventId] ?: emptyList(),
                 imgSelectedIds,
                 imgSelectionEnabled,
-                onEvent
+                onEvent,
+                onImgClick
             )
         }
     }
@@ -399,10 +432,11 @@ fun DayItem(
 @Composable
 fun EventItem(
     event: EventUiState,
-    thumbnails: List<PhotoUiState>,
+    photos: List<PhotoUiState>,
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
+    onImgClick: (List<Uri>, Int) -> Unit,
 )
 {
     Card(
@@ -420,17 +454,18 @@ fun EventItem(
             Text(event.address, style = MaterialTheme.typography.bodyMedium)
             Text(event.timeRange, style = MaterialTheme.typography.bodyMedium)
 
-            if (thumbnails.isEmpty())
+            if (photos.isEmpty())
             {
                 Text("添加照片")
             }
             else
             {
                 ThumbnailsGrid(
-                    thumbnails,
+                    photos,
                     imgSelectedIds,
                     imgSelectionEnabled,
-                    onEvent
+                    onEvent,
+                    onImgClick
                 )
             }
         }
@@ -439,10 +474,11 @@ fun EventItem(
 
 @Composable
 fun ThumbnailsGrid(
-    thumbnails: List<PhotoUiState>,
+    photos: List<PhotoUiState>,
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
+    onImgClick: (List<Uri>, Int) -> Unit,
     modifier: Modifier = Modifier
 )
 {
@@ -454,36 +490,36 @@ fun ThumbnailsGrid(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        items(thumbnails) { thumbnail ->
-            val isSelected = imgSelectedIds.contains(thumbnail.photoId)
+        itemsIndexed(photos) { index, photo ->
+            val isSelected = imgSelectedIds.contains(photo.photoId)
 
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .aspectRatio(1f)
                     .padding(dimensionResource(R.dimen.padding_small))
-                    .pointerInput(thumbnail.photoId)
+                    .pointerInput(photo.photoId)
                     {
                         detectTapGestures(
                             onLongPress = {
                                 onEvent(
-                                    ImgSelectionEvent.EnterSelectionModeAndSelect(thumbnail.photoId)
+                                    ImgSelectionEvent.EnterSelectionModeAndSelect(photo.photoId)
                                 )
                             },
                             onTap = {
                                 if (imgSelectionEnabled)
                                 {
-                                    onEvent(ImgSelectionEvent.Toggle(thumbnail.photoId))
+                                    onEvent(ImgSelectionEvent.Toggle(photo.photoId))
                                 }
                                 else
                                 {
-                                    // 非选择模式下，可进入大图预览 (可选)
+                                    onImgClick(photos.map { it.largeImgPath.toUri() }, index)
                                 }
                             }
                         )
                     }) {
                 AsyncImage(
-                    model = thumbnail.thumbnailPath.toUri(),
+                    model = photo.thumbnailPath.toUri(),
                     placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
                     error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
                     contentDescription = null,
