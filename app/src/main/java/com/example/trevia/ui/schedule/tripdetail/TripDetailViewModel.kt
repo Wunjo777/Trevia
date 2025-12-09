@@ -112,6 +112,8 @@ class TripDetailViewModel @Inject constructor(
 //                    it.dayId,
                     it.location,
                     it.address,
+                    it.latitude,
+                    it.longitude,
                     formatTimeRange(it.startTime, it.endTime),
                     it.description ?: ""
                 )
@@ -153,12 +155,16 @@ class TripDetailViewModel @Inject constructor(
         dayId: Long,
         locationName: String,
         address: String,
+        latitude: Double,
+        longitude: Double,
     )
     {
         val eventModel = EventModel(
             dayId = dayId,
             location = locationName,
             address = address,
+            latitude = latitude,
+            longitude = longitude,
             startTime = null,
             endTime = null,
             description = null
@@ -183,7 +189,7 @@ class TripDetailViewModel @Inject constructor(
 
     // 提示列表，StateFlow 供 Compose 直接收集
 
-    val tips: StateFlow<List<LocationTipUiState>> = _keyword
+    private val _tips: StateFlow<List<LocationTipUiState>> = _keyword
         .debounce(300)      // 防抖 300ms
         .filter { it.isNotBlank() }      // 忽略空输入
         .distinctUntilChanged()          // 相同关键词不重复请求
@@ -199,6 +205,8 @@ class TripDetailViewModel @Inject constructor(
             } // 出错显示空列表
         }.map { tipList -> tipList.map { tip -> tip.toLocationTipUiState() } }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val tips: StateFlow<List<LocationTipUiState>> = _tips
 
     // 当用户输入变化时调用
     fun onKeywordChanged(newKeyword: String)
@@ -298,6 +306,8 @@ data class EventUiState(
 //    val dayId: Long = 0,
     val location: String = "",
     val address: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
     val timeRange: String = "",
     val description: String = ""
 )
@@ -306,6 +316,6 @@ data class LocationTipUiState(
     val tipId: String = "",
     val name: String = "",
     val address: String = "",
-    val latitude: Double? = null,
-    val longitude: Double? = null
+    val latitude: Double=0.0,
+    val longitude: Double=0.0
 )

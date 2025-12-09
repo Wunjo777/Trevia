@@ -34,6 +34,11 @@
     <!--允许写设备缓存，用于问题排查-->
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
+    <!--LeanCloud基本权限-->
+    <!-- 基本模块（必须）START -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 基本模块 END -->
 
     <application
         android:name=".TreviaApplication"
@@ -47,7 +52,7 @@
         android:theme="@style/Theme.Trevia">
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="2b13cb53a15976915128f281f1c84415"/>
+            android:value="2b13cb53a15976915128f281f1c84415" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

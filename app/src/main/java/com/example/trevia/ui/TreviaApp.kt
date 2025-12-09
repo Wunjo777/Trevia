@@ -32,7 +32,15 @@ fun TreviaApp(navController: NavHostController = rememberNavController()) {
                     NavigationBarItem(
                         selected = selectedDestination == index,
                         onClick = {
-                            navController.navigate(route = destination.route)
+                            navController.navigate(destination.route) {
+                                // 避免重复实例
+                                launchSingleTop = true
+                                // 回到 start 目的地，不叠加
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true     // 恢复保存的页面状态
+                                }
+                                restoreState = true       // 切换回来恢复状态
+                            }
                             selectedDestination = index
                         },
                         icon = {

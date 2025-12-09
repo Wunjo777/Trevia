@@ -1,6 +1,7 @@
 package com.example.trevia.ui.utils
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -49,6 +50,11 @@ fun FullscreenImageBrowser(
 )
 {
     if (imageUris.isEmpty()) return
+
+    //拦截系统返回键
+    BackHandler {
+        onDismiss()
+    }
 
     val pagerState = rememberPagerState(initialPage = initialIndex, pageCount = { imageUris.size })
 

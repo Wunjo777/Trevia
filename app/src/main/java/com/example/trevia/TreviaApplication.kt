@@ -3,6 +3,7 @@ package com.example.trevia
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import cn.leancloud.LeanCloud
 import dagger.hilt.android.HiltAndroidApp
 import jakarta.inject.Inject
 
@@ -12,6 +13,8 @@ class TreviaApplication : Application(), Configuration.Provider
     override fun onCreate()
     {
         super.onCreate()
+
+        LeanCloud.initialize(this, "Cx0W1RPiUW0McHA4lrHoEkg9-gzGzoHsz", "jwXZesjK368srVA0E3oWmYnh", "https://cx0w1rpi.lc-cn-n1-shared.com");
     }
 
     @Inject

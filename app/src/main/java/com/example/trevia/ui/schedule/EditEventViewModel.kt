@@ -83,6 +83,8 @@ private fun EventModel.toEventInfoUiState(): EventInfoUiState
         dayId = dayId,
         location = location,
         address = address,
+        latitude = latitude,
+        longitude = longitude,
         startTime = startTime?.toTimeString() ?: "",
         endTime = endTime?.toTimeString() ?: "",
         description = description ?: ""
@@ -96,6 +98,8 @@ private fun EventInfoUiState.toEventModel(): EventModel
         dayId = dayId,
         location = location,
         address = address,
+        latitude = latitude,
+        longitude = longitude,
         startTime = startTime.toLocalTime(),
         endTime = endTime.toLocalTime(),
         description = description
@@ -107,6 +111,8 @@ data class EventInfoUiState(
     val dayId: Long = 0,
     val location: String = "",
     val address: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
     val startTime: String = "",
     val endTime: String = "",
     val description: String = ""

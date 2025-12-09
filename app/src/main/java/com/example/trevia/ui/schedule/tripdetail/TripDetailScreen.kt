@@ -131,7 +131,7 @@ fun LocationSearchContent(
     onAddEventChange: (Boolean) -> Unit,
     onKeywordChanged: (String) -> Unit,
     keyword: String,
-    onTipClick: ( dayId: Long, locationName: String, address: String) -> Unit,
+    onTipClick: ( dayId: Long, locationName: String, address: String, latitude: Double, longitude: Double) -> Unit,
     tips: List<LocationTipUiState>,
 )
 {
@@ -150,8 +150,8 @@ fun LocationSearchContent(
             onKeywordChanged = onKeywordChanged,
             keyword = keyword,
             tips = tips,
-            onTipClick = { locationName, address ->
-                onTipClick(dayId, locationName, address)
+            onTipClick = { locationName, address, latitude, longitude ->
+                onTipClick(dayId, locationName, address, latitude, longitude)
             },
             modifier = Modifier.align(
                 Alignment.BottomCenter
@@ -166,7 +166,7 @@ fun SearchLocationBar(
     onKeywordChanged: (String) -> Unit,
     keyword: String,
     tips: List<LocationTipUiState>,
-    onTipClick: (locationName: String, address: String) -> Unit,
+    onTipClick: (locationName: String, address: String, latitude: Double, longitude: Double) -> Unit,
     modifier: Modifier = Modifier
 )
 {
@@ -268,7 +268,7 @@ fun SearchLocationBar(
                     modifier = Modifier
                         .padding(dimensionResource(R.dimen.padding_small))
                         .clickable {
-                            onTipClick(tip.name, tip.address)
+                            onTipClick(tip.name, tip.address,tip.latitude,tip.longitude)
                             onClose()
                         }) {
                     Text(

@@ -7,8 +7,8 @@ data class TipModel(
     val name: String,
     val district: String,
     val address: String,
-    val latitude: Double?,
-    val longitude: Double?
+    val latitude: Double,
+    val longitude: Double
 )
 
 fun TipModel.toLocationTipUiState() = LocationTipUiState(poiId, name, address, latitude, longitude)

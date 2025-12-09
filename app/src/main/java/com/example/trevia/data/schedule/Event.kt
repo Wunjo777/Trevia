@@ -25,6 +25,8 @@ data class Event(
     val dayId: Long,
     val location: String,
     val address: String,
+    val latitude: Double,
+    val longitude: Double,
     val startTime: String?,
     val endTime: String?,
     val description: String?
@@ -35,6 +37,8 @@ fun Event.toEventModel() = EventModel(
     dayId = this.dayId,
     location = this.location,
     address = this.address,
+    latitude = this.latitude,
+    longitude = this.longitude,
     startTime = this.startTime?.toLocalTime(),
     endTime = this.endTime?.toLocalTime(),
     description = this.description
