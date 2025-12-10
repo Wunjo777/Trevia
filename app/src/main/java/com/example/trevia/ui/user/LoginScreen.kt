@@ -1,11 +1,15 @@
-package com.example.trevia.ui.login
+package com.example.trevia.ui.user
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -14,12 +18,31 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @Composable
 fun LoginScreen(
-    vm: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit,
+    vm: AuthViewModel = hiltViewModel(),
     onGoRegister: () -> Unit
-) {
-    if (vm.loginSuccess.value) {
-        LaunchedEffect(Unit) { onLoginSuccess() }
+)
+{
+    val uiState by vm.uiState.collectAsState()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        vm.event.collect { event ->
+            when (event)
+            {
+                is AuthEvent.RegisterSuccess ->
+                {
+                    Toast.makeText(context, "登录成功", Toast.LENGTH_SHORT).show()
+                }
+
+                is AuthEvent.Error           ->
+                {
+                    Toast.makeText(context, "登录失败：${event.message}", Toast.LENGTH_SHORT).show()
+                }
+
+                else                         ->
+                {
+                }
+            }
+        }
     }
 
     Column(
@@ -35,20 +58,25 @@ fun LoginScreen(
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = vm.username.value,
-            onValueChange = { vm.username.value = it },
+            value = uiState.username,
+            onValueChange = vm::onUsernameChange,
             label = { Text("用户名") }
         )
 
         OutlinedTextField(
-            value = vm.password.value,
-            onValueChange = { vm.password.value = it },
+            value = uiState.password,
+            onValueChange = vm::onPasswordChange,
             label = { Text("密码") },
             visualTransformation = PasswordVisualTransformation()
         )
 
-        if (vm.errorMsg.value != null) {
-            Text(vm.errorMsg.value!!, color = Color.Red)
+        if (uiState.errorMsg != null)
+        {
+            Text(
+                uiState.errorMsg!!,
+                color = Color.Red,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -56,14 +84,17 @@ fun LoginScreen(
         Button(
             onClick = { vm.login() },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !vm.isLoading.value
+            enabled = !uiState.isLoading
         ) {
-            if (vm.isLoading.value) {
+            if (uiState.isLoading)
+            {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     color = Color.White
                 )
-            } else {
+            }
+            else
+            {
                 Text("登录")
             }
         }

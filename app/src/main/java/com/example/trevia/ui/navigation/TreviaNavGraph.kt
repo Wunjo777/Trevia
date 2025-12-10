@@ -1,5 +1,7 @@
 package com.example.trevia.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -13,7 +15,9 @@ import com.example.trevia.ui.schedule.AddTripScreen
 import com.example.trevia.ui.schedule.EditEventScreen
 import com.example.trevia.ui.schedule.TripDetail.TripDetailScreen
 import com.example.trevia.ui.schedule.TripListScreen
+import com.example.trevia.ui.user.MineScreen
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun TreviaNavHost(
     navController: NavHostController,
@@ -25,6 +29,11 @@ fun TreviaNavHost(
         startDestination = CommonDestination.Schedule.route,
         modifier = modifier
     ) {
+        composable(CommonDestination.Mine.route) {
+            MineScreen(
+                navigateBack = { navController.popBackStack() },
+            )
+        }
         composable(CommonDestination.Recording.route) {
             TripRecordListScreen(onTripClick = {
                 navController.navigate(

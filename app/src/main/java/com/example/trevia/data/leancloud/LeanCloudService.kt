@@ -1,6 +1,8 @@
 package com.example.trevia.data.leancloud
 
 import cn.leancloud.LCUser
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -29,4 +31,24 @@ class LeanCloudService @Inject constructor()
                 })
             cont.invokeOnCancellation { disposable.dispose() }
         }
+
+    suspend fun login(username: String, password: String): LCUser =
+        suspendCancellableCoroutine { cont ->
+            val disposable = LCUser.logIn(username, password).subscribe(
+                { lcUser ->
+                    if (cont.isActive) cont.resume(lcUser)
+                },
+                { error ->
+                    if (cont.isActive) cont.resumeWithException(error)
+                })
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+
+    suspend fun logOut()
+    {
+        LCUser.logOut()
+    }
+
+    fun getCurrentUser(): LCUser? = LCUser.getCurrentUser()
+
 }
