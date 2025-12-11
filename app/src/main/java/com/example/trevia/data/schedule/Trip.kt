@@ -2,6 +2,7 @@ package com.example.trevia.data.schedule
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import cn.leancloud.LCObject
 import com.example.trevia.domain.schedule.model.TripModel
 import com.example.trevia.utils.strToIsoLocalDate
 import java.time.LocalDate
@@ -15,6 +16,7 @@ data class Trip(
     val destination: String,
     val startDate: String,
     val endDate: String,
+    val lcObjectId:String?=null
 )
 
 fun Trip.toTripModel(): TripModel
@@ -24,6 +26,9 @@ fun Trip.toTripModel(): TripModel
         name = this.name,
         destination = this.destination,
         startDate = this.startDate.strToIsoLocalDate(),
-        endDate = this.endDate.strToIsoLocalDate()
+        endDate = this.endDate.strToIsoLocalDate(),
+        lcObjectId = this.lcObjectId
     )
 }
+
+

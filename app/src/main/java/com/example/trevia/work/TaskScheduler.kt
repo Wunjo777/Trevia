@@ -1,10 +1,13 @@
 package com.example.trevia.work
 
 import android.net.Uri
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.trevia.work.workers.CreateAndAddLargeImgWorker
+import com.example.trevia.work.workers.TripUploadWorker
+import androidx.work.Constraints
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,6 +33,19 @@ class TaskScheduler @Inject constructor(
 
         val request = OneTimeWorkRequestBuilder<CreateAndAddLargeImgWorker>()
             .setInputData(input)
+            .build()
+
+        workManager.enqueue(request)
+    }
+
+    fun scheduleUploadDataToLC()
+    {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.UNMETERED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<TripUploadWorker>()
+            .setConstraints(constraints)
             .build()
 
         workManager.enqueue(request)

@@ -1,14 +1,15 @@
 package com.example.trevia.data.leancloud
 
+import android.util.Log
+import cn.leancloud.LCObject
+import cn.leancloud.LCObject.saveAllInBackground
 import cn.leancloud.LCUser
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class LeanCloudService @Inject constructor()
@@ -44,6 +45,30 @@ class LeanCloudService @Inject constructor()
                 })
             cont.invokeOnCancellation { disposable.dispose() }
         }
+
+    suspend fun uploadDatas(lcObjects: List<LCObject>): List<String> =
+        suspendCancellableCoroutine { cont ->
+            val disposable = saveAllInBackground(lcObjects).subscribe(
+                { responses ->
+                    if (!cont.isActive) return@subscribe
+
+                    val ids = (0 until responses.size).map { idx ->
+                        val item = responses.getJSONObject(idx)
+                        val success = item.getJSONObject("success")
+                        success.getString("objectId")
+                    }
+//                    Log.d("test", responses.toJSONString())
+
+                    cont.resume(ids)
+                },
+                { error ->
+                    // 异常处理
+                    if (cont.isActive) cont.resumeWithException(error)
+                }
+            )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+
 
     suspend fun logOut()
     {

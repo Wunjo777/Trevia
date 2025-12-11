@@ -14,6 +14,10 @@ interface TripRepository
 
     suspend fun deleteTripById(tripId: Long)
 
+    suspend fun getTripsWithoutLcObjectId(): List<TripModel>
+
+    suspend fun updateTripsWithLcObjectId(tripModels: List<TripModel>, lcObjectIds: List<String>)
+
     fun getAllTripsStream(): Flow<List<TripModel>>
 
     fun getTripByIdStream(tripId: Long): Flow<TripModel?>

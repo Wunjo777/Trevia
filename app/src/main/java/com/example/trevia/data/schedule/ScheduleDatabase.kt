@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import javax.inject.Singleton
 
 @Singleton
-@Database(entities = [Trip::class, Day::class, Event::class, Photo::class], version = 10, exportSchema = false)
+@Database(entities = [Trip::class, Day::class, Event::class, Photo::class], version = 11, exportSchema = false)
 abstract class ScheduleDatabase : RoomDatabase()
 {
     abstract fun tripDao(): TripDao

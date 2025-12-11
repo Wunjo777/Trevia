@@ -30,13 +30,11 @@ fun LoginScreen(
             {
                 is AuthEvent.LoginSuccess ->
                 {
-                    Log.d("test", "RegisterSuccess")
                     Toast.makeText(context, "登录成功", Toast.LENGTH_SHORT).show()
                 }
 
                 is AuthEvent.Error           ->
                 {
-                    Log.d("test", "RegisterError: ${event.message}")
                     Toast.makeText(context, "登录失败：${event.message}", Toast.LENGTH_SHORT).show()
                 }
 

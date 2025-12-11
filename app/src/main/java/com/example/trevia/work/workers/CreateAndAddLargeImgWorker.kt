@@ -25,7 +25,7 @@ class CreateAndAddLargeImgWorker @AssistedInject constructor(
     override suspend fun doWork(): Result
     {
         val uriString = inputData.getString("uri") ?: return Result.failure()
-        val photoId = inputData.getLong("photoId", -1)
+        val photoId = inputData.getLong("photoId", 0)
         val fileName = inputData.getString("fileName") ?: return Result.failure()
         val compressQuality = inputData.getInt("compressQuality", 80)
         val maxSize = inputData.getInt("maxSize", 1280)
@@ -39,7 +39,7 @@ class CreateAndAddLargeImgWorker @AssistedInject constructor(
                 maxSize
             )
 
-            // update DB
+            // update local DB
             updatePhotoUseCase.updateLargeImgPath(photoId, largeUri.path.toString())
 
             Result.success()

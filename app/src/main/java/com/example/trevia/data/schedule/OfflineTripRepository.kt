@@ -22,6 +22,20 @@ class OfflineTripRepository @Inject constructor(
 
     override suspend fun deleteTripById(tripId: Long) = tripDao.deleteTripById(tripId)
 
+    override suspend fun getTripsWithoutLcObjectId(): List<TripModel> =
+        tripDao.getTripsWithoutLcObjectId().map { it.toTripModel() }
+
+    override suspend fun updateTripsWithLcObjectId(
+        tripModels: List<TripModel>,
+        lcObjectIds: List<String>
+    )
+    {
+        val updated = tripModels.zip(lcObjectIds).map { (trip, id) ->
+            trip.toTrip().copy(lcObjectId = id)
+        }
+        tripDao.updateTrips(updated)
+    }
+
     override fun getTripByIdStream(tripId: Long): Flow<TripModel?>
     {
         return tripDao.getTripById(tripId).map { it?.toTripModel() }

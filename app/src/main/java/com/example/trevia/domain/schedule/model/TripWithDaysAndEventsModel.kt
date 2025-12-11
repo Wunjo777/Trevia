@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 data class TripWithDaysAndEventsModel
     (
-    val id: Long = -1,
+    val id: Long = 0,
     val name: String,
     val destination: String,
     val startDate: LocalDate,

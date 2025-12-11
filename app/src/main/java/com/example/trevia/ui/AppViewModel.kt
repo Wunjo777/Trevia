@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.trevia.domain.login.usecase.GetCurrentUserUseCase
 import com.example.trevia.ui.schedule.TripDetail.TripDetailUiState
 import com.example.trevia.ui.schedule.TripDetail.TripDetailViewModel
+import com.example.trevia.work.TaskScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,11 +15,19 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class AppViewModel @Inject constructor(getCurrentUserUseCase: GetCurrentUserUseCase) : ViewModel()
+class AppViewModel @Inject constructor(
+    getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val taskScheduler: TaskScheduler
+) : ViewModel()
 {
     companion object
     {
         const val TIMEOUT_MILLIS = 5_000L
+    }
+
+    init
+    {
+        taskScheduler.scheduleUploadDataToLC()
     }
 
     var isLoggedIn: StateFlow<Boolean> = getCurrentUserUseCase()

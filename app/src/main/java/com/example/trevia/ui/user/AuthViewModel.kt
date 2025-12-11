@@ -57,11 +57,9 @@ class AuthViewModel @Inject constructor(
                 loginUseCase(username, password)
                 _uiState.update { it.copy(isLoading = false) }
                 emitEvent(AuthEvent.LoginSuccess)
-                Log.d("test", "LoginSuccess emitted")
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
                 emitEvent(AuthEvent.Error("登录失败：${e.message}"))
-                Log.d("test", "LoginError: ${e.message}")
             }
         }
     }

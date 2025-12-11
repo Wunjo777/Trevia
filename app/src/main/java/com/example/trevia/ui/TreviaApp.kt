@@ -71,7 +71,6 @@ fun TreviaApp(
             }
         }
     ) { paddingValues ->
-        Log.d("test", "TreviaApp: $isLoggedIn")
         if (isLoggedIn)
         {
             TreviaNavHost(navController = navController, modifier = Modifier.padding(paddingValues))

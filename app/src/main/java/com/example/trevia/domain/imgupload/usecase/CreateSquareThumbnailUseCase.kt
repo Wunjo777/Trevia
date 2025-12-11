@@ -24,11 +24,6 @@ class CreateSquareThumbnailUseCase @Inject constructor(
             // Step 1: 使用 loadThumbnail 快速获取小图，避免直接 decode 原图
             val rawBitmap = context.contentResolver.loadThumbnail(uri, Size(width, width), null)
 
-            Log.d(
-                "GenerateThumbnailUseCase",
-                "Raw thumbnail from system: ${rawBitmap.width}x${rawBitmap.height}"
-            )
-
             // Step 2: extractThumbnail 自动处理缩放+中心裁剪
             // OPTIONS_RECYCLE_INPUT：生成后自动回收 rawBitmap，减少内存占用
             val finalBitmap = ThumbnailUtils.extractThumbnail(
@@ -36,11 +31,6 @@ class CreateSquareThumbnailUseCase @Inject constructor(
                 width,
                 width,
                 ThumbnailUtils.OPTIONS_RECYCLE_INPUT
-            )
-
-            Log.d(
-                "GenerateThumbnailUseCase",
-                "Final square thumbnail: ${finalBitmap.width}x${finalBitmap.height}"
             )
 
             saveImgFileUseCase(finalBitmap, fileName, compressQuality = compressQuality)

@@ -17,8 +17,14 @@ interface TripDao
     @Update
     suspend fun update(trip: Trip)
 
+    @Update
+    suspend fun updateTrips(trips: List<Trip>)
+
     @Delete
     suspend fun delete(trip: Trip)
+
+    @Query("SELECT * FROM trips WHERE LcObjectId IS NULL")
+    suspend fun getTripsWithoutLcObjectId(): List<Trip>
 
     @Query("SELECT * from trips")
     fun getAllTrips(): Flow<List<Trip>>

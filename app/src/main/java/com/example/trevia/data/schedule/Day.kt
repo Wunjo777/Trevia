@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import cn.leancloud.LCObject
 import com.example.trevia.domain.schedule.model.DayModel
 import com.example.trevia.utils.strToIsoLocalDate
 import java.time.LocalDate
@@ -27,7 +28,8 @@ data class Day(
     val id: Long = 0,
     val tripId: Long,
     val date: String,
-    val indexInTrip: Int
+    val indexInTrip: Int,
+    val lcObjectId:String?=null
 )
 
 fun Day.toDayModel(): DayModel
@@ -36,6 +38,7 @@ fun Day.toDayModel(): DayModel
         id = this.id,
         tripId = this.tripId,
         date = this.date.strToIsoLocalDate(),
-        indexInTrip = this.indexInTrip
+        indexInTrip = this.indexInTrip,
+        lcObjectId = this.lcObjectId
     )
 }
