@@ -4,7 +4,6 @@ import com.example.trevia.domain.schedule.model.TripModel
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Singleton
 
-@Singleton
 interface TripRepository
 {
     suspend fun insertTrip(tripModel: TripModel): Long

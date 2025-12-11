@@ -6,7 +6,9 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.trevia.work.workers.CreateAndAddLargeImgWorker
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class TaskScheduler @Inject constructor(
     private val workManager: WorkManager
 )

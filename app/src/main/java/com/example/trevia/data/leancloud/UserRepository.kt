@@ -13,7 +13,8 @@ import javax.inject.Singleton
 @Singleton
 class UserRepository @Inject constructor(private val leanCloudService: LeanCloudService)
 {
-    private val _currentUser = MutableStateFlow<UserModel?>(null)
+    private val _currentUser =
+        MutableStateFlow(leanCloudService.getCurrentUser()?.toModel())
     val currentUser: StateFlow<UserModel?> = _currentUser.asStateFlow()
 
     suspend fun register(username: String, password: String, email: String): UserModel
@@ -24,14 +25,14 @@ class UserRepository @Inject constructor(private val leanCloudService: LeanCloud
     suspend fun login(username: String, password: String): UserModel
     {
         val user = leanCloudService.login(username, password).toModel()
-        _currentUser.value = user
+        refreshCurrentUser()
         return user
     }
 
     suspend fun logOut()
     {
         leanCloudService.logOut()
-        _currentUser.value = null
+        refreshCurrentUser()
     }
 
     fun refreshCurrentUser()
