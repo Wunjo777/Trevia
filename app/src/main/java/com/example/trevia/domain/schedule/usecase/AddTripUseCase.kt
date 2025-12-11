@@ -7,7 +7,9 @@ import com.example.trevia.domain.schedule.model.isValid
 import com.example.trevia.domain.schedule.model.toTrip
 import javax.inject.Inject
 import com.example.trevia.R
+import javax.inject.Singleton
 
+@Singleton
 class AddTripUseCase @Inject constructor(
     @OfflineRepo private val tripRepository: TripRepository,
     private val createDaysForTripUseCase: CreateDaysForTripUseCase

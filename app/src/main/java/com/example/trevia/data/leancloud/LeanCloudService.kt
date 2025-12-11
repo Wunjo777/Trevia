@@ -8,8 +8,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 import javax.inject.Inject
+import javax.inject.Singleton
 
-
+@Singleton
 class LeanCloudService @Inject constructor()
 {
     suspend fun register(username: String, password: String, email: String): LCUser =

@@ -9,7 +9,9 @@ import androidx.annotation.RequiresApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import androidx.core.graphics.scale
+import javax.inject.Singleton
 
+@Singleton
 @RequiresApi(Build.VERSION_CODES.Q)
 class CreateLargeImgUseCase @Inject constructor(
     @ApplicationContext private val context: Context,

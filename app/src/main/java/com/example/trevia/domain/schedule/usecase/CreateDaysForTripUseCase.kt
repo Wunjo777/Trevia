@@ -7,7 +7,9 @@ import com.example.trevia.domain.schedule.model.TripModel
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class CreateDaysForTripUseCase @Inject constructor(private val dayRepository: DayRepository)
 {
     suspend operator fun invoke(tripModel: TripModel)

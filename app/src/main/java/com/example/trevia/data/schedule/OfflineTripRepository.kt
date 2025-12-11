@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+import javax.inject.Singleton
+
+@Singleton
 class OfflineTripRepository @Inject constructor(
     private val tripDao: TripDao
 ) : TripRepository

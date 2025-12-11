@@ -5,7 +5,9 @@ import com.example.trevia.data.leancloud.UserRepository
 import com.example.trevia.domain.login.model.UserModel
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class GetCurrentUserUseCase @Inject constructor(private val repo: UserRepository)
 {
     operator fun invoke(): StateFlow<UserModel?>

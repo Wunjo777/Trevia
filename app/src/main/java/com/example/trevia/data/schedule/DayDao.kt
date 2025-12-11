@@ -6,7 +6,9 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Singleton
 
+@Singleton
 @Dao
 interface DayDao
 {

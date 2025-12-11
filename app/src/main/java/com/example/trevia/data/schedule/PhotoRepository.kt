@@ -5,7 +5,9 @@ import com.example.trevia.domain.imgupload.model.toPhoto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PhotoRepository @Inject constructor(private val photoDao: PhotoDao)
 {
     suspend fun addPhoto(photo: PhotoModel): Long = photoDao.insert(photo.toPhoto())

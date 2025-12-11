@@ -5,7 +5,9 @@ import com.example.trevia.domain.imgupload.model.PhotoModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class AddPhotoUseCase @Inject constructor(
     private val photoRepository: PhotoRepository
 )

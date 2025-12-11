@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import javax.inject.Singleton
 
+@Singleton
 class GetTripWithDaysAndEventsUseCase @Inject constructor(
     @OfflineRepo private val tripRepository: TripRepository,
     private val dayRepository: DayRepository,

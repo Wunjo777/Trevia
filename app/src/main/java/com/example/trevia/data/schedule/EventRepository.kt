@@ -9,7 +9,9 @@ import com.example.trevia.domain.schedule.model.toEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class EventRepository @Inject constructor(private val eventDao: EventDao)
 {
     suspend fun insertEvent(eventModel: EventModel) = eventDao.insert(eventModel.toEvent())

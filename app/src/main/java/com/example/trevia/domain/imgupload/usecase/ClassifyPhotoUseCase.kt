@@ -6,7 +6,9 @@ import java.time.LocalTime
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.*
+import javax.inject.Singleton
 
+@Singleton
 class ClassifyPhotoUseCase @Inject constructor()
 {
     companion object

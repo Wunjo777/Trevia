@@ -1,5 +1,6 @@
 package com.example.trevia.ui.user
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.trevia.domain.login.usecase.LoginUseCase
@@ -56,9 +57,11 @@ class AuthViewModel @Inject constructor(
                 loginUseCase(username, password)
                 _uiState.update { it.copy(isLoading = false) }
                 emitEvent(AuthEvent.LoginSuccess)
+                Log.d("test", "LoginSuccess emitted")
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
                 emitEvent(AuthEvent.Error("登录失败：${e.message}"))
+                Log.d("test", "LoginError: ${e.message}")
             }
         }
     }

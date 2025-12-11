@@ -10,7 +10,9 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import java.io.IOException
+import javax.inject.Singleton
 
+@Singleton
 class SaveImgFileUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
 )

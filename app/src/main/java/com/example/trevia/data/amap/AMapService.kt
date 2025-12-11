@@ -5,9 +5,11 @@ import com.amap.api.services.help.Inputtips
 import com.amap.api.services.help.InputtipsQuery
 import com.amap.api.services.help.Tip
 import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@Singleton
 class AMapService(private val context: Context)
 {
 

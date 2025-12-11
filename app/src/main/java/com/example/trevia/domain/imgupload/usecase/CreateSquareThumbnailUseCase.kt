@@ -10,7 +10,9 @@ import android.util.Size
 import androidx.annotation.RequiresApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class CreateSquareThumbnailUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val saveImgFileUseCase: SaveImgFileUseCase

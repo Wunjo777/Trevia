@@ -3,7 +3,9 @@ package com.example.trevia.domain.amap.usecase
 import com.example.trevia.data.amap.TipRepository
 import com.example.trevia.domain.amap.model.TipModel
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class GetInputTipsUseCase @Inject constructor(
     private val tipRepository: TipRepository
 )

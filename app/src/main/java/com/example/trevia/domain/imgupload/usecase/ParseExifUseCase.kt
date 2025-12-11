@@ -9,7 +9,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import javax.inject.Singleton
 
+@Singleton
 class ParseExifUseCase @Inject constructor(
     @ApplicationContext private val context: Context
 )

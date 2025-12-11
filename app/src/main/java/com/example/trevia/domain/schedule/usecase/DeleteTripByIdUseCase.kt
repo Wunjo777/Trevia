@@ -4,7 +4,9 @@ import com.example.trevia.data.schedule.TripRepository
 import com.example.trevia.di.OfflineRepo
 import jakarta.inject.Inject
 import java.lang.Exception
+import javax.inject.Singleton
 
+@Singleton
 class DeleteTripByIdUseCase @Inject constructor(
     @OfflineRepo private val tripRepository: TripRepository
 )

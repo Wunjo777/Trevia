@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import javax.inject.Singleton
 
+@Singleton
 class GetAllTripsUseCase @Inject constructor(
     @OfflineRepo private val tripRepository: TripRepository
 ) {
