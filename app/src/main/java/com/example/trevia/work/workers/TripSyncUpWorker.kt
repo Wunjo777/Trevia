@@ -4,22 +4,22 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.trevia.domain.sync.usecase.TripUploadUseCase
+import com.example.trevia.domain.sync.usecase.TripSyncUpUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 @HiltWorker
-class TripUploadWorker @AssistedInject constructor(
+class TripSyncUpWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val tripUploadUseCase: TripUploadUseCase,
+    private val tripSyncUpUseCase: TripSyncUpUseCase,
 ) : CoroutineWorker(context, params)
 {
     override suspend fun doWork(): Result
     {
         return try
         {
-            tripUploadUseCase()
+            tripSyncUpUseCase()
             Result.success()
         } catch (e: Exception)
         {

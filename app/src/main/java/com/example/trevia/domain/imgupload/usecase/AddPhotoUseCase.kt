@@ -1,8 +1,7 @@
 package com.example.trevia.domain.imgupload.usecase
 
-import com.example.trevia.data.schedule.PhotoRepository
+import com.example.trevia.data.local.schedule.PhotoRepository
 import com.example.trevia.domain.imgupload.model.PhotoModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -1,4 +1,4 @@
-package com.example.trevia.data.schedule
+package com.example.trevia.data.local.schedule
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

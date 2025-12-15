@@ -1,7 +1,8 @@
-package com.example.trevia.data.leancloud
+package com.example.trevia.data.remote.leancloud
 
 import android.util.Log
 import cn.leancloud.LCObject
+import cn.leancloud.LCObject.deleteAllInBackground
 import cn.leancloud.LCObject.saveAllInBackground
 import cn.leancloud.LCUser
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -46,20 +47,48 @@ class LeanCloudService @Inject constructor()
             cont.invokeOnCancellation { disposable.dispose() }
         }
 
-    suspend fun uploadDatas(lcObjects: List<LCObject>): List<String> =
+    suspend fun upsertDatas(
+        pairs: List<Pair<Long, LCObject>>
+    ): Map<Long, String> =
         suspendCancellableCoroutine { cont ->
+
+            val lcObjects = pairs.map { it.second }
+
             val disposable = saveAllInBackground(lcObjects).subscribe(
                 { responses ->
                     if (!cont.isActive) return@subscribe
 
-                    val ids = (0 until responses.size).map { idx ->
-                        val item = responses.getJSONObject(idx)
-                        val success = item.getJSONObject("success")
-                        success.getString("objectId")
-                    }
-//                    Log.d("test", responses.toJSONString())
+                    val result = mutableMapOf<Long, String>()
 
-                    cont.resume(ids)
+                    for (index in 0 until responses.size)
+                    {
+                        val json = responses.getJSONObject(index)
+                        val success = json.getJSONObject("success")
+                        val objectId = success.getString("objectId")
+                        if (objectId != null)
+                        {
+                            val localId = pairs[index].first
+                            result[localId] = objectId
+                        }
+                    }
+
+                    cont.resume(result)
+                },
+                { error ->
+                    if (cont.isActive) cont.resumeWithException(error)
+                }
+            )
+
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+
+
+    suspend fun deleteDatas(lcObjects: List<LCObject>): Unit =
+        suspendCancellableCoroutine { cont ->
+            val disposable = deleteAllInBackground(lcObjects).subscribe(
+                { responses ->
+                    if (!cont.isActive) return@subscribe
+                    cont.resume(Unit)
                 },
                 { error ->
                     // 异常处理
@@ -68,7 +97,6 @@ class LeanCloudService @Inject constructor()
             )
             cont.invokeOnCancellation { disposable.dispose() }
         }
-
 
     suspend fun logOut()
     {

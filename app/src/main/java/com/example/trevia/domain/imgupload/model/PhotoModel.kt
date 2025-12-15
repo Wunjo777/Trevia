@@ -1,6 +1,6 @@
 package com.example.trevia.domain.imgupload.model
 
-import com.example.trevia.data.schedule.Photo
+import com.example.trevia.data.local.schedule.Photo
 
 data class PhotoModel(
     val id: Long = 0,

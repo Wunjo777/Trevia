@@ -1,6 +1,6 @@
 package com.example.trevia.domain.schedule.usecase
 
-import com.example.trevia.data.schedule.TripRepository
+import com.example.trevia.data.local.schedule.TripRepository
 import com.example.trevia.di.OfflineRepo
 import jakarta.inject.Inject
 import java.lang.Exception

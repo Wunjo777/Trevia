@@ -1,9 +1,5 @@
-package com.example.trevia.data.schedule
+package com.example.trevia.data.local.schedule
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
 import com.example.trevia.domain.schedule.model.EventModel
 import com.example.trevia.domain.schedule.model.toEvent
 import kotlinx.coroutines.flow.Flow

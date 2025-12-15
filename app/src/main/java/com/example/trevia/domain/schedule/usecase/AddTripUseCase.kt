@@ -1,12 +1,10 @@
 package com.example.trevia.domain.schedule.usecase
 
-import com.example.trevia.data.schedule.TripRepository
+import com.example.trevia.data.local.schedule.TripRepository
 import com.example.trevia.di.OfflineRepo
 import com.example.trevia.domain.schedule.model.TripModel
 import com.example.trevia.domain.schedule.model.isValid
-import com.example.trevia.domain.schedule.model.toTrip
 import javax.inject.Inject
-import com.example.trevia.R
 import javax.inject.Singleton
 
 @Singleton

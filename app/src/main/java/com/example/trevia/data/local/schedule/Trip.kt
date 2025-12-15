@@ -1,22 +1,21 @@
-package com.example.trevia.data.schedule
+package com.example.trevia.data.local.schedule
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import cn.leancloud.LCObject
+import com.example.trevia.data.remote.SyncState
 import com.example.trevia.domain.schedule.model.TripModel
 import com.example.trevia.utils.strToIsoLocalDate
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Entity(tableName = "trips")
 data class Trip(
     @PrimaryKey(autoGenerate = true)
-    val id: Long=0,
+    val id: Long = 0,
     val name: String,
     val destination: String,
     val startDate: String,
     val endDate: String,
-    val lcObjectId:String?=null
+    val lcObjectId: String? = null,
+    val syncState: SyncState = SyncState.PENDING
 )
 
 fun Trip.toTripModel(): TripModel
@@ -27,7 +26,8 @@ fun Trip.toTripModel(): TripModel
         destination = this.destination,
         startDate = this.startDate.strToIsoLocalDate(),
         endDate = this.endDate.strToIsoLocalDate(),
-        lcObjectId = this.lcObjectId
+        lcObjectId = this.lcObjectId,
+        syncState = this.syncState
     )
 }
 

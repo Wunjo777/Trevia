@@ -5,21 +5,15 @@ import androidx.compose.runtime.State
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.trevia.data.schedule.EventRepository
 import com.example.trevia.domain.schedule.model.EventModel
-import com.example.trevia.domain.schedule.usecase.AddEventUseCase
 import com.example.trevia.domain.schedule.usecase.GetEventByIdUseCase
 import com.example.trevia.domain.schedule.usecase.UpdateEventUseCase
 import com.example.trevia.ui.navigation.EditEventDestination
-import com.example.trevia.ui.navigation.TripDetailsDestination
 import com.example.trevia.utils.toLocalTime
 import com.example.trevia.utils.toTimeString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class EditEventViewModel @Inject constructor(

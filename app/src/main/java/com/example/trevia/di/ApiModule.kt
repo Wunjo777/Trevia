@@ -1,7 +1,7 @@
 package com.example.trevia.di
 
 import android.content.Context
-import com.example.trevia.data.amap.AMapService
+import com.example.trevia.data.remote.amap.AMapService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

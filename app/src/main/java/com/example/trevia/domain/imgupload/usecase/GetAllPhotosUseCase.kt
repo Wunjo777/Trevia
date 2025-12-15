@@ -1,6 +1,6 @@
 package com.example.trevia.domain.imgupload.usecase
 
-import com.example.trevia.data.schedule.PhotoRepository
+import com.example.trevia.data.local.schedule.PhotoRepository
 import com.example.trevia.domain.imgupload.model.PhotoModel
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

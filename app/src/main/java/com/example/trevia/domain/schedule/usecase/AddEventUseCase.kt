@@ -1,7 +1,6 @@
 package com.example.trevia.domain.schedule.usecase
 
-import com.example.trevia.data.schedule.EventRepository
-import com.example.trevia.di.OfflineRepo
+import com.example.trevia.data.local.schedule.EventRepository
 import com.example.trevia.domain.schedule.model.EventModel
 import jakarta.inject.Inject
 import javax.inject.Singleton

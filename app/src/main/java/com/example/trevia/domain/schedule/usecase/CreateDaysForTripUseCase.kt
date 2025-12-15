@@ -1,10 +1,8 @@
 package com.example.trevia.domain.schedule.usecase
 
-import com.example.trevia.data.schedule.DayRepository
-import com.example.trevia.data.schedule.Day
+import com.example.trevia.data.local.schedule.DayRepository
 import com.example.trevia.domain.schedule.model.DayModel
 import com.example.trevia.domain.schedule.model.TripModel
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import javax.inject.Singleton

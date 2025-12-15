@@ -6,7 +6,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.trevia.work.workers.CreateAndAddLargeImgWorker
-import com.example.trevia.work.workers.TripUploadWorker
+import com.example.trevia.work.workers.TripSyncUpWorker
 import androidx.work.Constraints
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,7 +44,7 @@ class TaskScheduler @Inject constructor(
             .setRequiredNetworkType(NetworkType.UNMETERED)
             .build()
 
-        val request = OneTimeWorkRequestBuilder<TripUploadWorker>()
+        val request = OneTimeWorkRequestBuilder<TripSyncUpWorker>()
             .setConstraints(constraints)
             .build()
 

@@ -1,4 +1,4 @@
-package com.example.trevia.data.amap
+package com.example.trevia.data.remote.amap
 
 import android.content.Context
 import com.amap.api.services.help.Inputtips

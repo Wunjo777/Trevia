@@ -1,6 +1,6 @@
 package com.example.trevia.domain.login.usecase
 
-import com.example.trevia.data.leancloud.UserRepository
+import com.example.trevia.data.remote.leancloud.UserRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 

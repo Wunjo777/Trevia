@@ -1,14 +1,11 @@
-package com.example.trevia.data.schedule
+package com.example.trevia.data.local.schedule
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import cn.leancloud.LCObject
 import com.example.trevia.domain.schedule.model.DayModel
 import com.example.trevia.utils.strToIsoLocalDate
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 
 @Entity(

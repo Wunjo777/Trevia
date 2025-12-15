@@ -1,6 +1,6 @@
 package com.example.trevia.domain.schedule.model
 
-import com.example.trevia.data.schedule.Day
+import com.example.trevia.data.local.schedule.Day
 import com.example.trevia.utils.isoLocalDateToStr
 import java.time.LocalDate
 

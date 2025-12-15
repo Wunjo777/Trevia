@@ -1,8 +1,8 @@
 package com.example.trevia.domain.schedule.usecase
 
-import com.example.trevia.data.schedule.DayRepository
-import com.example.trevia.data.schedule.EventRepository
-import com.example.trevia.data.schedule.TripRepository
+import com.example.trevia.data.local.schedule.DayRepository
+import com.example.trevia.data.local.schedule.EventRepository
+import com.example.trevia.data.local.schedule.TripRepository
 import com.example.trevia.di.OfflineRepo
 import com.example.trevia.domain.schedule.model.DayWithEventsModel
 import com.example.trevia.domain.schedule.model.TripWithDaysAndEventsModel

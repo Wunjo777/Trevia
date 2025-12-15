@@ -1,6 +1,6 @@
 package com.example.trevia.domain.schedule.model
 
-import com.example.trevia.data.schedule.Event
+import com.example.trevia.data.local.schedule.Event
 import com.example.trevia.utils.toTimeString
 import java.time.LocalTime
 

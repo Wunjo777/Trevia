@@ -1,4 +1,4 @@
-package com.example.trevia.data.amap
+package com.example.trevia.data.remote.amap
 
 import com.example.trevia.domain.amap.model.TipModel
 import jakarta.inject.Inject

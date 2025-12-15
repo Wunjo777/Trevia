@@ -1,4 +1,4 @@
-package com.example.trevia.data.schedule
+package com.example.trevia.data.local.schedule
 
 import com.example.trevia.domain.imgupload.model.PhotoModel
 import com.example.trevia.domain.imgupload.model.toPhoto

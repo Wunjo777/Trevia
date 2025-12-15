@@ -1,7 +1,5 @@
-package com.example.trevia.data.schedule
+package com.example.trevia.data.local.schedule
 
-import com.example.trevia.data.schedule.DayDao
-import com.example.trevia.data.schedule.Day
 import com.example.trevia.domain.schedule.model.DayModel
 import com.example.trevia.domain.schedule.model.toDay
 import kotlinx.coroutines.flow.Flow

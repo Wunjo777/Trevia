@@ -1,10 +1,10 @@
 package com.example.trevia.domain.schedule.model
 
 import cn.leancloud.LCObject
-import com.example.trevia.data.schedule.Trip
+import com.example.trevia.data.local.schedule.Trip
+import com.example.trevia.data.remote.SyncState
 import com.example.trevia.utils.isoLocalDateToStr
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 data class TripModel(
     val id: Long = 0,
@@ -12,7 +12,8 @@ data class TripModel(
     val destination: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
-    val lcObjectId: String? = null
+    val lcObjectId: String? = null,
+    val syncState: SyncState = SyncState.PENDING
 )
 
 fun TripModel.isValid(): Boolean
@@ -33,17 +34,18 @@ fun TripModel.toTrip(): Trip
         destination = destination,
         startDate = startDateString,
         endDate = endDateString,
-        lcObjectId = lcObjectId
+        lcObjectId = lcObjectId,
+        syncState = syncState
     )
 }
 
 fun TripModel.toLcObject(): LCObject
 {
-    val tripLcObject = LCObject("Trip")
+    val tripLcObject =
+        if (lcObjectId != null) LCObject.createWithoutData("Trip", lcObjectId) else LCObject("Trip")
     tripLcObject.put("name", this.name)
     tripLcObject.put("destination", this.destination)
     tripLcObject.put("startDate", this.startDate.isoLocalDateToStr())
     tripLcObject.put("endDate", this.endDate.isoLocalDateToStr())
     return tripLcObject
 }
-

@@ -1,7 +1,7 @@
 package com.example.trevia.di
 
-import com.example.trevia.data.schedule.OfflineTripRepository
-import com.example.trevia.data.schedule.TripRepository
+import com.example.trevia.data.local.schedule.OfflineTripRepository
+import com.example.trevia.data.local.schedule.TripRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
