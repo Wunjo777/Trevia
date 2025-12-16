@@ -1,6 +1,7 @@
 package com.example.trevia.work
 
 import android.net.Uri
+import android.util.Log
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -8,6 +9,7 @@ import androidx.work.workDataOf
 import com.example.trevia.work.workers.CreateAndAddLargeImgWorker
 import com.example.trevia.work.workers.TripSyncUpWorker
 import androidx.work.Constraints
+import com.example.trevia.work.workers.TripSyncDownWorker
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,16 +40,23 @@ class TaskScheduler @Inject constructor(
         workManager.enqueue(request)
     }
 
-    fun scheduleUploadDataToLC()
+    fun scheduleSync()
     {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.UNMETERED)
             .build()
 
-        val request = OneTimeWorkRequestBuilder<TripSyncUpWorker>()
+        val upRequest = OneTimeWorkRequestBuilder<TripSyncUpWorker>()
             .setConstraints(constraints)
             .build()
 
-        workManager.enqueue(request)
+        val downRequest = OneTimeWorkRequestBuilder<TripSyncDownWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        workManager.beginWith(upRequest)   // 上行
+            .then(downRequest)      // 下行
+            .enqueue()
+        Log.d("test", "scheduleSync started")
     }
 }

@@ -7,20 +7,23 @@ import javax.inject.Singleton
 
 interface TripRepository
 {
-    suspend fun insertTrip(tripModel: TripModel): Long
+    suspend fun upsertTrip(tripModel: TripModel): Long
 
-    suspend fun updateTrip(tripModel: TripModel)
+    suspend fun upsertTrips(tripModels: List<TripModel>)
 
     suspend fun deleteTripById(tripId: Long)
 
-    suspend fun hardDeleteTrips(tripModels: List<TripModel>)
+    suspend fun hardDeleteTripsByIds(tripIds: List<Long>)
 
     suspend fun updateTripWithLcObjectId(tripId: Long, lcObjectId: String)
 
     suspend fun getTripsBySyncState(states: List<SyncState>): List<TripModel>
 
+     suspend fun getTripIdMapByObjectIds(lcObjectIds: List<String>): Map<String,Long>
+
      suspend fun updateTripsWithSynced(tripIds: List<Long>)
 
+    suspend fun updateTripsWithUpdatedAt(tripIds: List<Long>, updatedAt: Long)
 
     fun getAllTripsStream(): Flow<List<TripModel>>
 

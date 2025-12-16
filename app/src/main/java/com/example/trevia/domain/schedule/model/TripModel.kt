@@ -13,7 +13,8 @@ data class TripModel(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val lcObjectId: String? = null,
-    val syncState: SyncState = SyncState.PENDING
+    val syncState: SyncState = SyncState.PENDING,
+    val updatedAt: Long=0
 )
 
 fun TripModel.isValid(): Boolean
@@ -35,11 +36,12 @@ fun TripModel.toTrip(): Trip
         startDate = startDateString,
         endDate = endDateString,
         lcObjectId = lcObjectId,
-        syncState = syncState
+        syncState = syncState,
+        updatedAt = updatedAt
     )
 }
 
-fun TripModel.toLcObject(): LCObject
+fun TripModel.toLcObject(timeStamp: Long): LCObject
 {
     val tripLcObject =
         if (lcObjectId != null) LCObject.createWithoutData("Trip", lcObjectId) else LCObject("Trip")
@@ -47,5 +49,15 @@ fun TripModel.toLcObject(): LCObject
     tripLcObject.put("destination", this.destination)
     tripLcObject.put("startDate", this.startDate.isoLocalDateToStr())
     tripLcObject.put("endDate", this.endDate.isoLocalDateToStr())
+    tripLcObject.put("isDeleted", false)
+    tripLcObject.put("updatedAt", timeStamp)
+    return tripLcObject
+}
+
+fun TripModel.toLcObjectUpdateIsDelete(timeStamp: Long): LCObject
+{
+    val tripLcObject =LCObject.createWithoutData("Trip", this.lcObjectId)
+    tripLcObject.put("isDeleted", true)
+    tripLcObject.put("updatedAt", timeStamp)
     return tripLcObject
 }

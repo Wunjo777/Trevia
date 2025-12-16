@@ -19,5 +19,4 @@ abstract class ScheduleDatabase : RoomDatabase()
     abstract fun eventDao(): EventDao
 
     abstract fun photoDao(): PhotoDao
-
 }

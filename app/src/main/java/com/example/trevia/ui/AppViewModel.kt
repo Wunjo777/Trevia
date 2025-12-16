@@ -27,7 +27,7 @@ class AppViewModel @Inject constructor(
 
     init
     {
-        taskScheduler.scheduleUploadDataToLC()
+        taskScheduler.scheduleSync()
     }
 
     var isLoggedIn: StateFlow<Boolean> = getCurrentUserUseCase()

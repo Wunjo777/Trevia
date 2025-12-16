@@ -15,7 +15,8 @@ data class Trip(
     val startDate: String,
     val endDate: String,
     val lcObjectId: String? = null,
-    val syncState: SyncState = SyncState.PENDING
+    val syncState: SyncState = SyncState.PENDING,
+    val updatedAt: Long = 0
 )
 
 fun Trip.toTripModel(): TripModel
@@ -27,7 +28,8 @@ fun Trip.toTripModel(): TripModel
         startDate = this.startDate.strToIsoLocalDate(),
         endDate = this.endDate.strToIsoLocalDate(),
         lcObjectId = this.lcObjectId,
-        syncState = this.syncState
+        syncState = this.syncState,
+        updatedAt = this.updatedAt
     )
 }
 

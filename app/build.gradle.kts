@@ -80,6 +80,8 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.8.1")
     //EXIF
     implementation("androidx.exifinterface:exifinterface:1.4.1")
+    //Datastore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     testImplementation(libs.junit)
 

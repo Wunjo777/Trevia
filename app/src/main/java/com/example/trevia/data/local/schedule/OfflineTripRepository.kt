@@ -14,25 +14,32 @@ class OfflineTripRepository @Inject constructor(
     private val tripDao: TripDao
 ) : TripRepository
 {
-    override suspend fun insertTrip(tripModel: TripModel): Long = tripDao.insert(tripModel.toTrip())
+    override suspend fun upsertTrip(tripModel: TripModel): Long = tripDao.upsert(tripModel.toTrip())
 
-    override suspend fun updateTrip(tripModel: TripModel) = tripDao.update(tripModel.toTrip())
+    override suspend fun upsertTrips(tripModels: List<TripModel>) =
+        tripDao.upsertTrips(tripModels.map { it.toTrip() })
 
     override suspend fun deleteTripById(tripId: Long) = tripDao.softDeleteTripById(tripId)
 
-    override suspend fun hardDeleteTrips(tripModels: List<TripModel>) =
-        tripDao.hardDeleteTrips(tripModels.map { it.toTrip() })
+    override suspend fun hardDeleteTripsByIds(tripIds: List<Long>) =
+        tripDao.hardDeleteTripsByIds(tripIds)
 
     override suspend fun getTripsBySyncState(states: List<SyncState>): List<TripModel> =
         tripDao.getTripsBySyncState(states).map { it.toTripModel() }
 
+    override suspend fun getTripIdMapByObjectIds(lcObjectIds: List<String>): Map<String, Long> =
+        tripDao.getTripsByObjectIds(lcObjectIds).associate { it.lcObjectId!! to it.id }
+
+
     override suspend fun updateTripsWithSynced(tripIds: List<Long>) =
         tripDao.updateTripsWithSynced(tripIds)
 
-    override suspend fun updateTripWithLcObjectId(
-        tripId: Long,
-        lcObjectId: String
-    )
+    override suspend fun updateTripsWithUpdatedAt(tripIds: List<Long>, updatedAt: Long) =
+        tripDao.updateTripsWithUpdatedAt(tripIds, updatedAt)
+
+
+
+    override suspend fun updateTripWithLcObjectId(tripId: Long, lcObjectId: String)
     {
         tripDao.updateTripWithLcObjectId(tripId, lcObjectId)
     }

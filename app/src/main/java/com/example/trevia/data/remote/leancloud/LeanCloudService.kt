@@ -4,8 +4,10 @@ import android.util.Log
 import cn.leancloud.LCObject
 import cn.leancloud.LCObject.deleteAllInBackground
 import cn.leancloud.LCObject.saveAllInBackground
+import cn.leancloud.LCQuery
 import cn.leancloud.LCUser
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -82,8 +84,26 @@ class LeanCloudService @Inject constructor()
             cont.invokeOnCancellation { disposable.dispose() }
         }
 
+    suspend fun softDeleteDatas(lcObjects: List<LCObject>): Unit =
+        suspendCancellableCoroutine { cont ->
+            Log.d("syncup", "get inside suspendCancellableCoroutine")
+            val disposable = saveAllInBackground(lcObjects).subscribe(
+                { responses ->
+                    Log.d("syncup", "softDeleteDatas ON LC success")
+                    cont.resume(Unit)
+                },
+                { error ->
+                    if (cont.isActive)
+                    {
+                        Log.e("syncup", "softDeleteDatas ON LC error", error)
+                        cont.resumeWithException(error)
+                    }
+                }
+            )
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
 
-    suspend fun deleteDatas(lcObjects: List<LCObject>): Unit =
+    suspend fun hardDeleteDatasAfter7d(lcObjects: List<LCObject>): Unit =
         suspendCancellableCoroutine { cont ->
             val disposable = deleteAllInBackground(lcObjects).subscribe(
                 { responses ->
@@ -98,7 +118,38 @@ class LeanCloudService @Inject constructor()
             cont.invokeOnCancellation { disposable.dispose() }
         }
 
-    suspend fun logOut()
+    fun getDatasAfter(lastSyncDate: Date, className: String): List<LCObject>
+    {
+        val allResults = mutableListOf<LCObject>()
+        var hasMore = true
+        var cursorDate = lastSyncDate
+
+        //分页查询
+        while (hasMore)
+        {
+            val query = LCQuery<LCObject>(className)
+            query.whereGreaterThan("updatedAt", cursorDate)
+            query.orderByAscending("updatedAt")
+            query.limit(100)
+
+            val results = query.find()
+
+            if (results.isEmpty())
+            {
+                hasMore = false
+            }
+            else
+            {
+                allResults += results
+                // 用最后一条的 updatedAt 作为新的游标
+                cursorDate = results.last().updatedAt
+            }
+        }
+
+        return allResults
+    }
+
+    fun logOut()
     {
         LCUser.logOut()
     }
