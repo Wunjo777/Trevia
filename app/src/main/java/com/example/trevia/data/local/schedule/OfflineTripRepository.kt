@@ -27,16 +27,19 @@ class OfflineTripRepository @Inject constructor(
     override suspend fun getTripsBySyncState(states: List<SyncState>): List<TripModel> =
         tripDao.getTripsBySyncState(states).map { it.toTripModel() }
 
-    override suspend fun getTripIdMapByObjectIds(lcObjectIds: List<String>): Map<String, Long> =
-        tripDao.getTripsByObjectIds(lcObjectIds).associate { it.lcObjectId!! to it.id }
+    override suspend fun getTripMapByObjectIds(lcObjectIds: List<String>): Map<String, TripModel> =
+        tripDao.getTripsByObjectIds(lcObjectIds).map { it.toTripModel() }
+            .associateBy { it.lcObjectId!! }
+
+    override suspend fun getTripIdsByObjectIds(lcObjectIds: List<String>): List<Long> =
+        tripDao.getTripIdsByObjectIds(lcObjectIds)
 
 
     override suspend fun updateTripsWithSynced(tripIds: List<Long>) =
         tripDao.updateTripsWithSynced(tripIds)
 
-    override suspend fun updateTripsWithUpdatedAt(tripIds: List<Long>, updatedAt: Long) =
-        tripDao.updateTripsWithUpdatedAt(tripIds, updatedAt)
-
+    override suspend fun updateTripWithUpdatedAt(tripId: Long, updatedAt: Long)=
+        tripDao.updateTripWithUpdatedAt(tripId, updatedAt)
 
 
     override suspend fun updateTripWithLcObjectId(tripId: Long, lcObjectId: String)

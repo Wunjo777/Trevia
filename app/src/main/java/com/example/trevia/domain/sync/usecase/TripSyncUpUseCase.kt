@@ -16,38 +16,44 @@ class TripSyncUpUseCase @Inject constructor(
 {
     suspend operator fun invoke()
     {
-            val trips =
-                tripRepository.getTripsBySyncState(listOf(SyncState.PENDING, SyncState.DELETED))
-            if (trips.isEmpty())
-            {
-                Log.d("syncup", "TripUploadUseCase: no need to upload.")
-                return
-            }
+        val trips =
+            tripRepository.getTripsBySyncState(listOf(SyncState.PENDING, SyncState.DELETED))
+        if (trips.isEmpty())
+        {
+            Log.d("syncup", "TripUploadUseCase: no need to upload.")
+            return
+        }
 
-            val upserts = trips.filter { it.syncState == SyncState.PENDING }
-            val deletes = trips.filter { it.syncState == SyncState.DELETED }
+        val upserts = trips.filter { it.syncState == SyncState.PENDING }
+        val deletes = trips.filter { it.syncState == SyncState.DELETED }
 
-            Log.d("syncup", "TripUploadUseCase: upload ${upserts.size} trips, delete ${deletes.size} trips.")
-            val currentTimeStamp = System.currentTimeMillis()
+        Log.d(
+            "syncup",
+            "TripUploadUseCase: upload ${upserts.size} trips, delete ${deletes.size} trips."
+        )
 
-            if (deletes.isNotEmpty())
-            {
-                Log.d("syncup", "TripUploadUseCase: soft delete ${deletes.size} trips.")
-                syncRepository.softDeleteTrips(deletes,currentTimeStamp)
+        if (deletes.isNotEmpty())
+        {
+            Log.d("syncup", "TripUploadUseCase: soft delete ${deletes.size} trips.")
+            syncRepository.softDeleteTrips(deletes)
 //                TODO("hard delete trips on LC after 7 days")
+        }
+
+        if (upserts.isNotEmpty())
+        {
+            val uploadResult = syncRepository.upsertTrips(upserts)
+            val idMap = uploadResult.tripIdToLcObjectId
+            val updatedAtList = uploadResult.updatedAtList
+
+            idMap.forEach { (tripId, lcObjectId) ->
+                tripRepository.updateTripWithLcObjectId(tripId, lcObjectId)
             }
 
-            if (upserts.isNotEmpty())
-            {
-                val tripToLcObject = syncRepository.upsertTrips(upserts,currentTimeStamp)
-                tripToLcObject.forEach { (tripId, lcObjectId) ->
-                    tripRepository.updateTripWithLcObjectId(tripId, lcObjectId)
-                }
-                tripRepository.updateTripsWithSynced(upserts.map { it.id })
+            updatedAtList.forEachIndexed { index, updatedAt ->
+                tripRepository.updateTripWithUpdatedAt(upserts[index].id, updatedAt)
             }
 
-            //update time stamp for all
-            tripRepository.updateTripsWithUpdatedAt(trips.map { it.id },currentTimeStamp)
-
+            tripRepository.updateTripsWithSynced(upserts.map { it.id })
+        }
     }
 }

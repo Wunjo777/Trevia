@@ -24,6 +24,9 @@ interface TripDao
     @Query("SELECT * FROM trips WHERE lcObjectId IN (:lcObjectIds)")
     suspend fun getTripsByObjectIds(lcObjectIds: List<String>): List<Trip>
 
+    @Query("SELECT id FROM trips WHERE lcObjectId IN (:lcObjectIds)")
+    suspend fun getTripIdsByObjectIds(lcObjectIds: List<String>): List<Long>
+
     @Query("SELECT * from trips WHERE syncState != :deleted")
     fun getAllTrips(deleted: SyncState = SyncState.DELETED): Flow<List<Trip>>
 
@@ -36,12 +39,12 @@ interface TripDao
     @Query("update trips set syncState = :synced where id IN (:tripIds)")
     suspend fun updateTripsWithSynced(tripIds: List<Long>, synced: SyncState = SyncState.SYNCED)
 
-    @Query("update trips set updatedAt = :updatedAt where id IN (:tripIds)")
-    suspend fun updateTripsWithUpdatedAt(tripIds: List<Long>, updatedAt: Long)
-
     @Query("update trips set lcObjectId = :lcObjectId where id = :id")
     suspend fun updateTripWithLcObjectId(
         id: Long,
         lcObjectId: String
     )
+
+    @Query("update trips set updatedAt = :updatedAt where id = :tripId")
+    suspend fun updateTripWithUpdatedAt(tripId: Long, updatedAt: Long)
 }

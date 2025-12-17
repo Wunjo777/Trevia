@@ -17,13 +17,16 @@ interface TripRepository
 
     suspend fun updateTripWithLcObjectId(tripId: Long, lcObjectId: String)
 
+    suspend fun updateTripWithUpdatedAt(tripId: Long, updatedAt: Long)
+
     suspend fun getTripsBySyncState(states: List<SyncState>): List<TripModel>
 
-     suspend fun getTripIdMapByObjectIds(lcObjectIds: List<String>): Map<String,Long>
+     suspend fun getTripMapByObjectIds(lcObjectIds: List<String>): Map<String,TripModel>
+
+    suspend fun getTripIdsByObjectIds(lcObjectIds: List<String>): List<Long>
 
      suspend fun updateTripsWithSynced(tripIds: List<Long>)
 
-    suspend fun updateTripsWithUpdatedAt(tripIds: List<Long>, updatedAt: Long)
 
     fun getAllTripsStream(): Flow<List<TripModel>>
 

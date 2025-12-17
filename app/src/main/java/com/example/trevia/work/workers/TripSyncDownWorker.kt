@@ -1,6 +1,7 @@
 package com.example.trevia.work.workers
 
 import android.content.Context
+import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -24,8 +25,8 @@ class TripSyncDownWorker @AssistedInject constructor(
             Result.success()
         } catch (e: Exception)
         {
-            throw(e)
-//            Result.retry()
+            Log.e("EEE", "TripSyncDownWorker doWork error", e)
+            Result.retry()
         }
     }
 }

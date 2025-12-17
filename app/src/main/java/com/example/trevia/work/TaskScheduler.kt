@@ -46,16 +46,16 @@ class TaskScheduler @Inject constructor(
             .setRequiredNetworkType(NetworkType.UNMETERED)
             .build()
 
-        val upRequest = OneTimeWorkRequestBuilder<TripSyncUpWorker>()
-            .setConstraints(constraints)
-            .build()
-
         val downRequest = OneTimeWorkRequestBuilder<TripSyncDownWorker>()
             .setConstraints(constraints)
             .build()
 
-        workManager.beginWith(upRequest)   // 上行
-            .then(downRequest)      // 下行
+        val upRequest = OneTimeWorkRequestBuilder<TripSyncUpWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        workManager.beginWith(downRequest)   // 下行
+            .then(upRequest)      // 上行
             .enqueue()
         Log.d("test", "scheduleSync started")
     }

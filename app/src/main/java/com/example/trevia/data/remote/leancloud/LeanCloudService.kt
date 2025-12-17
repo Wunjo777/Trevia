@@ -51,7 +51,7 @@ class LeanCloudService @Inject constructor()
 
     suspend fun upsertDatas(
         pairs: List<Pair<Long, LCObject>>
-    ): Map<Long, String> =
+    ): UploadResult =
         suspendCancellableCoroutine { cont ->
 
             val lcObjects = pairs.map { it.second }
@@ -60,21 +60,24 @@ class LeanCloudService @Inject constructor()
                 { responses ->
                     if (!cont.isActive) return@subscribe
 
-                    val result = mutableMapOf<Long, String>()
+                    val idMap = mutableMapOf<Long, String>()
+                    val updatedAtList = mutableListOf<Long>()
 
                     for (index in 0 until responses.size)
                     {
                         val json = responses.getJSONObject(index)
                         val success = json.getJSONObject("success")
                         val objectId = success.getString("objectId")
-                        if (objectId != null)
+                        //获取updatedAt
+                        updatedAtList.add(success.getDate("updatedAt").time)
+                        if (objectId != null)//插入返回objectId，更新不返回
                         {
                             val localId = pairs[index].first
-                            result[localId] = objectId
+                            idMap[localId] = objectId
                         }
                     }
 
-                    cont.resume(result)
+                    cont.resume(UploadResult(idMap, updatedAtList))
                 },
                 { error ->
                     if (cont.isActive) cont.resumeWithException(error)
@@ -157,3 +160,8 @@ class LeanCloudService @Inject constructor()
     fun getCurrentUser(): LCUser? = LCUser.getCurrentUser()
 
 }
+
+data class UploadResult(
+    val tripIdToLcObjectId: Map<Long, String>,
+    val updatedAtList: List<Long>
+)

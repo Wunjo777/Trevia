@@ -6,6 +6,7 @@ import com.example.trevia.data.local.schedule.TripRepository
 import com.example.trevia.data.remote.SyncState
 import com.example.trevia.data.remote.leancloud.SyncRepository
 import com.example.trevia.di.OfflineRepo
+import com.example.trevia.domain.schedule.model.TripModel
 import com.example.trevia.ui.user.LoginScreen
 import java.util.Date
 import javax.inject.Inject
@@ -34,18 +35,44 @@ class TripSyncDownUseCase @Inject constructor(
         Log.d("test", "upsertsSize: ${upserts.size}")
         Log.d("test", "deletesSize: ${deletes.size}")
 
-        val deletesTripIdMap =
-            tripRepository.getTripIdMapByObjectIds(deletes.map { it.lcObjectId!! })
-        tripRepository.hardDeleteTripsByIds(deletesTripIdMap.values.toList())
-
-        val upsertsTripIdMap =
-            tripRepository.getTripIdMapByObjectIds(upserts.map { it.lcObjectId!! })
-        val tripsToUpsert = upserts.map {
-            val tripId = upsertsTripIdMap[it.lcObjectId!!]
-            if (tripId != null) it.copy(id = tripId) else it
+        val deletesTripIds =
+            tripRepository.getTripIdsByObjectIds(deletes.map { it.lcObjectId!! })
+        if (deletesTripIds.isNotEmpty())
+        {
+            tripRepository.hardDeleteTripsByIds(deletesTripIds)
         }
 
-        tripRepository.upsertTrips(tripsToUpsert)
+        val tripsToArchive = mutableListOf<TripModel>()
+
+        val upsertsTripMap =
+            tripRepository.getTripMapByObjectIds(upserts.map { it.lcObjectId!! })
+
+        val tripsToUpsert = upserts.mapNotNull { trip ->
+            val currentTrip = upsertsTripMap[trip.lcObjectId!!]
+            when {
+                currentTrip == null -> trip//服务端新的，直接插入
+                currentTrip.updatedAt >= trip.updatedAt || currentTrip.syncState == SyncState.DELETED -> null//刚上传和本地删除的，不更新
+                else -> {//需要更新
+                    if (currentTrip.syncState == SyncState.PENDING) {//本地存在冲突，先归档
+                        tripsToArchive.add(currentTrip)
+                    }
+                    trip.copy(id = currentTrip.id)
+                }
+            }
+        }
+
+        Log.d("test", "tripsToUpsertSize: ${tripsToUpsert.size}")
+        Log.d("test", "tripsToArchiveSize: ${tripsToArchive.size}")
+
+        if(tripsToUpsert.isNotEmpty())
+        {
+            tripRepository.upsertTrips(tripsToUpsert)
+        }
+
+        if(tripsToArchive.isNotEmpty())
+        {
+            TODO("archiveTrips")
+        }
 
         syncDatastoreRepository.setLastSyncTime(changedTrips.last().updatedAt)
         Log.d("test", "updatedSyncTime: ${Date(syncDatastoreRepository.getLastSyncTime())}")

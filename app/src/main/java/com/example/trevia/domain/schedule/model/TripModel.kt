@@ -41,7 +41,7 @@ fun TripModel.toTrip(): Trip
     )
 }
 
-fun TripModel.toLcObject(timeStamp: Long): LCObject
+fun TripModel.toLcObject(): LCObject
 {
     val tripLcObject =
         if (lcObjectId != null) LCObject.createWithoutData("Trip", lcObjectId) else LCObject("Trip")
@@ -50,14 +50,12 @@ fun TripModel.toLcObject(timeStamp: Long): LCObject
     tripLcObject.put("startDate", this.startDate.isoLocalDateToStr())
     tripLcObject.put("endDate", this.endDate.isoLocalDateToStr())
     tripLcObject.put("isDeleted", false)
-    tripLcObject.put("updatedAt", timeStamp)
     return tripLcObject
 }
 
-fun TripModel.toLcObjectUpdateIsDelete(timeStamp: Long): LCObject
+fun TripModel.toLcObjectUpdateIsDelete(): LCObject
 {
     val tripLcObject =LCObject.createWithoutData("Trip", this.lcObjectId)
     tripLcObject.put("isDeleted", true)
-    tripLcObject.put("updatedAt", timeStamp)
     return tripLcObject
 }

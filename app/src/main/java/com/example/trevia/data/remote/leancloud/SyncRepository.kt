@@ -14,15 +14,15 @@ import com.example.trevia.utils.strToIsoLocalDate
 @Singleton
 class SyncRepository @Inject constructor(private val service: LeanCloudService)
 {
-    suspend fun upsertTrips(tripModels: List<TripModel>, timeStamp: Long): Map<Long, String>
+    suspend fun upsertTrips(tripModels: List<TripModel>): UploadResult
     {
-        return service.upsertDatas(tripModels.map { Pair(it.id, it.toLcObject(timeStamp)) })
+        return service.upsertDatas(tripModels.map { Pair(it.id, it.toLcObject()) })
     }
 
-    suspend fun softDeleteTrips(tripModels: List<TripModel>, timeStamp: Long)
+    suspend fun softDeleteTrips(tripModels: List<TripModel>)
     {
         Log.d("syncup", "softDeleteTrips: soft delete ${tripModels.size} trips.")
-        service.softDeleteDatas(tripModels.map { it.toLcObjectUpdateIsDelete(timeStamp) })
+        service.softDeleteDatas(tripModels.map { it.toLcObjectUpdateIsDelete() })
     }
 
     suspend fun getTripsAfter(timeStamp: Long): List<TripModel>
