@@ -75,6 +75,6 @@ class TripSyncDownUseCase @Inject constructor(
         }
 
         syncDatastoreRepository.setLastSyncTime(changedTrips.last().updatedAt)
-        Log.d("test", "updatedSyncTime: ${Date(syncDatastoreRepository.getLastSyncTime())}")
+        Log.d("test", "updatedSyncTime: ${syncDatastoreRepository.getLastSyncTime()}")
     }
 }

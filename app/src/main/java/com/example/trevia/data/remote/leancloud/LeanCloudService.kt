@@ -6,6 +6,8 @@ import cn.leancloud.LCObject.deleteAllInBackground
 import cn.leancloud.LCObject.saveAllInBackground
 import cn.leancloud.LCQuery
 import cn.leancloud.LCUser
+import com.example.trevia.utils.LeanCloudFailureException
+import com.example.trevia.utils.toUtcMillis
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Date
 import javax.inject.Inject
@@ -69,7 +71,12 @@ class LeanCloudService @Inject constructor()
                         val success = json.getJSONObject("success")
                         val objectId = success.getString("objectId")
                         //获取updatedAt
-                        updatedAtList.add(success.getDate("updatedAt").time)
+                        var dateStr = success.getString("updatedAt")
+                        if (dateStr == null)
+                        {
+                            dateStr = success.getString("createdAt")
+                        }
+                        updatedAtList.add(dateStr.toUtcMillis())
                         if (objectId != null)//插入返回objectId，更新不返回
                         {
                             val localId = pairs[index].first
@@ -80,7 +87,12 @@ class LeanCloudService @Inject constructor()
                     cont.resume(UploadResult(idMap, updatedAtList))
                 },
                 { error ->
-                    if (cont.isActive) cont.resumeWithException(error)
+                    if (cont.isActive) cont.resumeWithException(
+                        LeanCloudFailureException(
+                            error.message ?: "LeanCloudFailureException",
+                            error
+                        )
+                    )
                 }
             )
 
@@ -99,7 +111,12 @@ class LeanCloudService @Inject constructor()
                     if (cont.isActive)
                     {
                         Log.e("syncup", "softDeleteDatas ON LC error", error)
-                        cont.resumeWithException(error)
+                        cont.resumeWithException(
+                            LeanCloudFailureException(
+                                error.message ?: "LeanCloudFailureException",
+                                error
+                            )
+                        )
                     }
                 }
             )
@@ -121,36 +138,49 @@ class LeanCloudService @Inject constructor()
             cont.invokeOnCancellation { disposable.dispose() }
         }
 
-    fun getDatasAfter(lastSyncDate: Date, className: String): List<LCObject>
-    {
-        val allResults = mutableListOf<LCObject>()
-        var hasMore = true
-        var cursorDate = lastSyncDate
+    suspend fun getDatasAfter(lastSyncDate: Date, className: String): List<LCObject> =
+        suspendCancellableCoroutine { cont ->
+            val allResults = mutableListOf<LCObject>()
+            var cursorDate = lastSyncDate
 
-        //分页查询
-        while (hasMore)
-        {
-            val query = LCQuery<LCObject>(className)
-            query.whereGreaterThan("updatedAt", cursorDate)
-            query.orderByAscending("updatedAt")
-            query.limit(100)
+            // 递归分页查询函数
+            fun queryPage() {
+                val query = LCQuery<LCObject>(className).apply {
+                    whereGreaterThan("updatedAt", cursorDate)
+                    orderByAscending("updatedAt")
+                    limit = 100
+                }
 
-            val results = query.find()
+                val disposable = query.findInBackground().subscribe(
+                    { results ->
+                        if (results.isNotEmpty()) {
+                            allResults += results
+                            cursorDate = results.last().updatedAt
+                            queryPage() // 查询下一页
+                        } else {
+                            // 查询完成
+                            if (cont.isActive) cont.resume(allResults)
+                        }
+                    },
+                    { error ->
+                        if (cont.isActive) {
+                            cont.resumeWithException(
+                                LeanCloudFailureException(
+                                    error.message ?: "LeanCloudFailureException",
+                                    error
+                                )
+                            )
+                        }
+                    }
+                )
 
-            if (results.isEmpty())
-            {
-                hasMore = false
+                // 协程取消时释放资源
+                cont.invokeOnCancellation { disposable.dispose() }
             }
-            else
-            {
-                allResults += results
-                // 用最后一条的 updatedAt 作为新的游标
-                cursorDate = results.last().updatedAt
-            }
+
+            // 开始查询第一页
+            queryPage()
         }
-
-        return allResults
-    }
 
     fun logOut()
     {

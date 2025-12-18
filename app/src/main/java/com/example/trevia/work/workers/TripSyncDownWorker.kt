@@ -7,6 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.trevia.domain.sync.usecase.TripSyncDownUseCase
 import com.example.trevia.domain.sync.usecase.TripSyncUpUseCase
+import com.example.trevia.utils.LeanCloudFailureException
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -23,10 +24,14 @@ class TripSyncDownWorker @AssistedInject constructor(
         {
             tripSyncDownUseCase()
             Result.success()
+        } catch (e: LeanCloudFailureException)
+        {
+            Log.w("WWW", "Fetch trips failed,retrying...", e)
+            Result.retry()
         } catch (e: Exception)
         {
             Log.e("EEE", "TripSyncDownWorker doWork error", e)
-            Result.retry()
+            Result.failure()
         }
     }
 }

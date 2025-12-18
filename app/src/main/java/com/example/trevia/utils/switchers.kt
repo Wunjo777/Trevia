@@ -3,6 +3,7 @@ package com.example.trevia.utils
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.Instant
 
 fun Long.toDateString(): String {
     val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
@@ -14,6 +15,9 @@ fun String.strToIsoLocalDate(): LocalDate
     val formatter = DateTimeFormatter.ISO_LOCAL_DATE
     return LocalDate.parse(this, formatter)
 }
+
+fun String.toUtcMillis(): Long =
+    Instant.parse(this).toEpochMilli()
 
 fun LocalDate.isoLocalDateToStr(): String
 {
