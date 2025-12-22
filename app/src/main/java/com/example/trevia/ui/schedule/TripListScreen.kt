@@ -67,7 +67,7 @@ fun TripListScreen(
     })
     { innerPadding ->
         TripListContent(
-            onDeleteTrip = { tripListViewModel.deleteTripById(it) },
+            onDeleteTrip = { tripListViewModel.deleteTripByIdWithDaysAndEvents(it) },
             navigateToTripDetail = navigateToTripDetail,
             tripListUiState.trips,
             contentPadding = innerPadding

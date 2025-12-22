@@ -14,9 +14,9 @@ data class Trip(
     val destination: String,
     val startDate: String,
     val endDate: String,
-    val lcObjectId: String? = null,
-    val syncState: SyncState = SyncState.PENDING,
-    val updatedAt: Long = 0
+    val lcObjectId: String?,
+    val syncState: SyncState,
+    val updatedAt: Long
 )
 
 fun Trip.toTripModel(): TripModel

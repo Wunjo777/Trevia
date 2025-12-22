@@ -13,7 +13,7 @@ interface TripRepository
 
     suspend fun deleteTripById(tripId: Long)
 
-    suspend fun hardDeleteTripsByIds(tripIds: List<Long>)
+    suspend fun hardDeleteTripsByObjectIds(tripObjectIds: List<String>)
 
     suspend fun updateTripWithLcObjectId(tripId: Long, lcObjectId: String)
 
@@ -21,12 +21,15 @@ interface TripRepository
 
     suspend fun getTripsBySyncState(states: List<SyncState>): List<TripModel>
 
-     suspend fun getTripMapByObjectIds(lcObjectIds: List<String>): Map<String,TripModel>
+    suspend fun getTripMapByObjectIds(lcObjectIds: List<String>): Map<String, TripModel>
+
+    suspend fun getTripIdByLcObjectId(lcObjectId: String): Long?
 
     suspend fun getTripIdsByObjectIds(lcObjectIds: List<String>): List<Long>
 
-     suspend fun updateTripsWithSynced(tripIds: List<Long>)
+    suspend fun updateTripsWithSynced(tripIds: List<Long>)
 
+    suspend fun getTripsByIds(tripIds: List<Long>): List<TripModel>
 
     fun getAllTripsStream(): Flow<List<TripModel>>
 

@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.trevia.data.remote.SyncState
 import com.example.trevia.domain.schedule.model.EventModel
 import com.example.trevia.utils.toLocalTime
 
@@ -29,7 +30,10 @@ data class Event(
     val longitude: Double,
     val startTime: String?,
     val endTime: String?,
-    val description: String?
+    val description: String?,
+    val lcObjectId: String?,
+    val syncState: SyncState,
+    val updatedAt: Long
 )
 
 fun Event.toEventModel() = EventModel(
@@ -41,5 +45,8 @@ fun Event.toEventModel() = EventModel(
     longitude = this.longitude,
     startTime = this.startTime?.toLocalTime(),
     endTime = this.endTime?.toLocalTime(),
-    description = this.description
+    description = this.description,
+    lcObjectId = this.lcObjectId,
+    syncState = this.syncState,
+    updatedAt = this.updatedAt
 )

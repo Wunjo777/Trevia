@@ -16,8 +16,8 @@ interface TripDao
     suspend fun upsert(trip: Trip): Long
     @Upsert
     suspend fun upsertTrips(trips: List<Trip>)
-    @Query("DELETE FROM trips WHERE id IN (:tripIds)")
-    suspend fun hardDeleteTripsByIds(tripIds: List<Long>)
+    @Query("DELETE FROM trips WHERE lcObjectId IN (:tripObjectIds)")
+    suspend fun hardDeleteTripsByObjectIds(tripObjectIds: List<String>)
     @Query("SELECT * FROM trips WHERE syncState IN (:states)")
     suspend fun getTripsBySyncState(states: List<SyncState>): List<Trip>
 
@@ -35,6 +35,12 @@ interface TripDao
 
     @Query("SELECT * FROM trips WHERE id = :tripId AND syncState != :deleted")
     fun getTripById(tripId: Long, deleted: SyncState = SyncState.DELETED): Flow<Trip?>
+
+    @Query("SELECT * FROM trips WHERE id IN (:tripIds)")
+    suspend fun getTripsByIds(tripIds: List<Long>): List<Trip>
+
+    @Query("SELECT id FROM trips WHERE lcObjectId = :lcObjectId")
+    suspend fun getTripIdByLcObjectId(lcObjectId: String): Long?
 
     @Query("update trips set syncState = :synced where id IN (:tripIds)")
     suspend fun updateTripsWithSynced(tripIds: List<Long>, synced: SyncState = SyncState.SYNCED)

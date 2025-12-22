@@ -3,7 +3,7 @@ package com.example.trevia.ui.schedule
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.trevia.domain.schedule.model.TripModel
-import com.example.trevia.domain.schedule.usecase.DeleteTripByIdUseCase
+import com.example.trevia.domain.schedule.usecase.DeleteTripByIdWithDaysAndEventsUseCase
 import com.example.trevia.domain.schedule.usecase.GetAllTripsUseCase
 import com.example.trevia.utils.isoLocalDateToStr
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.collections.map
 import kotlin.collections.sortedBy
@@ -22,7 +21,7 @@ import kotlin.collections.sortedBy
 @HiltViewModel
 class TripListViewModel @Inject constructor(
     getAllTripsUseCase: GetAllTripsUseCase,
-    private val deleteTripByIdUseCase: DeleteTripByIdUseCase
+    private val deleteTripByIdWithDaysAndEventsUseCase: DeleteTripByIdWithDaysAndEventsUseCase
 ) : ViewModel()
 {
     companion object
@@ -64,10 +63,10 @@ class TripListViewModel @Inject constructor(
         )
     }
 
-    fun deleteTripById(tripId: Long)
+    fun deleteTripByIdWithDaysAndEvents(tripId: Long)
     {
         viewModelScope.launch {
-            deleteTripByIdUseCase(tripId)
+            deleteTripByIdWithDaysAndEventsUseCase(tripId)
         }
     }
 }

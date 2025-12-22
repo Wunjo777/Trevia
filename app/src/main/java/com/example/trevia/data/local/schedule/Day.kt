@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.trevia.data.remote.SyncState
 import com.example.trevia.domain.schedule.model.DayModel
 import com.example.trevia.utils.strToIsoLocalDate
 
@@ -26,7 +27,9 @@ data class Day(
     val tripId: Long,
     val date: String,
     val indexInTrip: Int,
-    val lcObjectId:String?=null
+    val lcObjectId: String?,
+    val syncState: SyncState,
+    val updatedAt: Long
 )
 
 fun Day.toDayModel(): DayModel
@@ -36,6 +39,8 @@ fun Day.toDayModel(): DayModel
         tripId = this.tripId,
         date = this.date.strToIsoLocalDate(),
         indexInTrip = this.indexInTrip,
-        lcObjectId = this.lcObjectId
+        lcObjectId = this.lcObjectId,
+        syncState = this.syncState,
+        updatedAt = this.updatedAt
     )
 }

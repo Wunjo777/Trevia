@@ -1,5 +1,6 @@
 package com.example.trevia.data.local
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -20,13 +21,16 @@ class SyncDatastoreRepository @Inject constructor(
     private object Keys
     {
         val TRIP_LAST_SYNC_TIME = longPreferencesKey("trip_last_sync_time")
+        val DAY_LAST_SYNC_TIME = longPreferencesKey("day_last_sync_time")
+        val EVENT_LAST_SYNC_TIME = longPreferencesKey("event_last_sync_time")
     }
 
-    suspend fun getLastSyncTime(): Long
+    suspend fun getTripLastSyncTime(): Long
     {
         return dataStore.data.catch {
             if (it is IOException)
             {
+                Log.e("EEE", "Error reading sync times", it)
                 it.printStackTrace()
                 emit(emptyPreferences())
             }
@@ -41,10 +45,64 @@ class SyncDatastoreRepository @Inject constructor(
             .first()
     }
 
-    suspend fun setLastSyncTime(time: Long)
+    suspend fun setTripLastSyncTime(time: Long)
     {
         dataStore.edit { syncTimes ->
             syncTimes[Keys.TRIP_LAST_SYNC_TIME] = time
+        }
+    }
+
+    suspend fun getDayLastSyncTime(): Long
+    {
+        return dataStore.data.catch {
+            if (it is IOException)
+            {
+                Log.e("EEE", "Error reading sync times", it)
+                it.printStackTrace()
+                emit(emptyPreferences())
+            }
+            else
+            {
+                throw it
+            }
+        }
+            .map { syncTimes ->
+                syncTimes[Keys.DAY_LAST_SYNC_TIME] ?: 0L
+            }
+            .first()
+    }
+
+    suspend fun setDayLastSyncTime(time: Long)
+    {
+        dataStore.edit { syncTimes ->
+            syncTimes[Keys.DAY_LAST_SYNC_TIME] = time
+        }
+    }
+
+    suspend fun getEventLastSyncTime(): Long
+    {
+        return dataStore.data.catch {
+            if (it is IOException)
+            {
+                Log.e("EEE", "Error reading sync times", it)
+                it.printStackTrace()
+                emit(emptyPreferences())
+            }
+            else
+            {
+                throw it
+            }
+        }
+            .map { syncTimes ->
+                syncTimes[Keys.EVENT_LAST_SYNC_TIME] ?: 0L
+            }
+            .first()
+    }
+
+    suspend fun setEventLastSyncTime(time: Long)
+    {
+        dataStore.edit { syncTimes ->
+            syncTimes[Keys.EVENT_LAST_SYNC_TIME] = time
         }
     }
 }

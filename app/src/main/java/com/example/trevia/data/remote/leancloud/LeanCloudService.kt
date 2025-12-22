@@ -6,6 +6,7 @@ import cn.leancloud.LCObject.deleteAllInBackground
 import cn.leancloud.LCObject.saveAllInBackground
 import cn.leancloud.LCQuery
 import cn.leancloud.LCUser
+import cn.leancloud.json.JSONArray
 import com.example.trevia.utils.LeanCloudFailureException
 import com.example.trevia.utils.toUtcMillis
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -99,13 +100,13 @@ class LeanCloudService @Inject constructor()
             cont.invokeOnCancellation { disposable.dispose() }
         }
 
-    suspend fun softDeleteDatas(lcObjects: List<LCObject>): Unit =
+    suspend fun softDeleteDatas(lcObjects: List<LCObject>): JSONArray =
         suspendCancellableCoroutine { cont ->
             Log.d("syncup", "get inside suspendCancellableCoroutine")
             val disposable = saveAllInBackground(lcObjects).subscribe(
                 { responses ->
                     Log.d("syncup", "softDeleteDatas ON LC success")
-                    cont.resume(Unit)
+                    cont.resume(responses)
                 },
                 { error ->
                     if (cont.isActive)
@@ -192,6 +193,6 @@ class LeanCloudService @Inject constructor()
 }
 
 data class UploadResult(
-    val tripIdToLcObjectId: Map<Long, String>,
+    val dataIdToLcObjectId: Map<Long, String>,
     val updatedAtList: List<Long>
 )

@@ -241,6 +241,7 @@ class TripDetailViewModel @Inject constructor(
                 )
             }
         }
+
         uris.forEach { uri ->
             viewModelScope.launch(Dispatchers.IO) {
                 val exifData = parseExifUseCase(uri)
@@ -274,6 +275,8 @@ class TripDetailViewModel @Inject constructor(
                     compressQuality = 80,
                     maxSize = 1280
                 )
+
+
             }
         }
     }

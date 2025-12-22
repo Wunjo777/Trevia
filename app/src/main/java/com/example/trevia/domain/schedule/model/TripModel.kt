@@ -53,9 +53,4 @@ fun TripModel.toLcObject(): LCObject
     return tripLcObject
 }
 
-fun TripModel.toLcObjectUpdateIsDelete(): LCObject
-{
-    val tripLcObject =LCObject.createWithoutData("Trip", this.lcObjectId)
-    tripLcObject.put("isDeleted", true)
-    return tripLcObject
-}
+

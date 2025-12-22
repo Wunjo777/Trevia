@@ -2,28 +2,28 @@ package com.example.trevia.domain.sync.usecase
 
 import android.util.Log
 import com.example.trevia.data.local.SyncDatastoreRepository
+import com.example.trevia.data.local.schedule.DayRepository
+import com.example.trevia.data.local.schedule.EventRepository
 import com.example.trevia.data.local.schedule.TripRepository
 import com.example.trevia.data.remote.SyncState
-import com.example.trevia.data.remote.leancloud.SyncRepository
+import com.example.trevia.data.remote.leancloud.SyncTripRepository
 import com.example.trevia.di.OfflineRepo
 import com.example.trevia.domain.schedule.model.TripModel
-import com.example.trevia.ui.user.LoginScreen
-import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TripSyncDownUseCase @Inject constructor(
     @OfflineRepo private val tripRepository: TripRepository,
-    private val syncRepository: SyncRepository,
+    private val syncTripRepository: SyncTripRepository,
     private val syncDatastoreRepository: SyncDatastoreRepository
 )
 {
     suspend operator fun invoke()
     {
-        val lastSyncTime = syncDatastoreRepository.getLastSyncTime()
+        val lastSyncTime = syncDatastoreRepository.getTripLastSyncTime()
         Log.d("test", "lastSyncTime: $lastSyncTime")
-        val changedTrips = syncRepository.getTripsAfter(lastSyncTime)
+        val changedTrips = syncTripRepository.getTripsAfter(lastSyncTime)
         Log.d("test", "changedTripsSize: ${changedTrips.size}")
         if (changedTrips.isEmpty())
         {
@@ -35,12 +35,7 @@ class TripSyncDownUseCase @Inject constructor(
         Log.d("test", "upsertsSize: ${upserts.size}")
         Log.d("test", "deletesSize: ${deletes.size}")
 
-        val deletesTripIds =
-            tripRepository.getTripIdsByObjectIds(deletes.map { it.lcObjectId!! })
-        if (deletesTripIds.isNotEmpty())
-        {
-            tripRepository.hardDeleteTripsByIds(deletesTripIds)
-        }
+        tripRepository.hardDeleteTripsByObjectIds(deletes.map{it.lcObjectId!!})
 
         val tripsToArchive = mutableListOf<TripModel>()
 
@@ -74,7 +69,7 @@ class TripSyncDownUseCase @Inject constructor(
             TODO("archiveTrips")
         }
 
-        syncDatastoreRepository.setLastSyncTime(changedTrips.last().updatedAt)
-        Log.d("test", "updatedSyncTime: ${syncDatastoreRepository.getLastSyncTime()}")
+        syncDatastoreRepository.setTripLastSyncTime(changedTrips.last().updatedAt)
+        Log.d("test", "updatedSyncTime: ${syncDatastoreRepository.getTripLastSyncTime()}")
     }
 }

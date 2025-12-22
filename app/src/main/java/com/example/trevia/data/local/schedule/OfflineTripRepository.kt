@@ -21,8 +21,8 @@ class OfflineTripRepository @Inject constructor(
 
     override suspend fun deleteTripById(tripId: Long) = tripDao.softDeleteTripById(tripId)
 
-    override suspend fun hardDeleteTripsByIds(tripIds: List<Long>) =
-        tripDao.hardDeleteTripsByIds(tripIds)
+    override suspend fun hardDeleteTripsByObjectIds(tripObjectIds: List<String>) =
+        tripDao.hardDeleteTripsByObjectIds(tripObjectIds)
 
     override suspend fun getTripsBySyncState(states: List<SyncState>): List<TripModel> =
         tripDao.getTripsBySyncState(states).map { it.toTripModel() }
@@ -47,10 +47,16 @@ class OfflineTripRepository @Inject constructor(
         tripDao.updateTripWithLcObjectId(tripId, lcObjectId)
     }
 
+    override suspend fun getTripsByIds(tripIds: List<Long>): List<TripModel> =
+        tripDao.getTripsByIds(tripIds).map { it.toTripModel() }
+
     override fun getTripByIdStream(tripId: Long): Flow<TripModel?>
     {
         return tripDao.getTripById(tripId).map { it?.toTripModel() }
     }
+
+    override suspend fun getTripIdByLcObjectId(lcObjectId: String): Long? =
+        tripDao.getTripIdByLcObjectId(lcObjectId)
 
     override fun getAllTripsStream(): Flow<List<TripModel>>
     {
