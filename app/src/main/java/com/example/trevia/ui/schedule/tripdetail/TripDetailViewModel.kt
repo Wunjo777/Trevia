@@ -252,31 +252,30 @@ class TripDetailViewModel @Inject constructor(
                 val uriHash = kotlin.math.abs(uri.toString().hashCode())
                 val uuid = java.util.UUID.randomUUID().toString()
                 val baseName = "img_${uriHash}_$uuid"
-                val thumbFilename = "${baseName}_thumb.jpg"
+//                val thumbFilename = "${baseName}_thumb.jpg"
                 val largeFilename = "${baseName}_large.jpg"
 
                 // ---------- 2. 生成缩略图 ----------
-                val savedThumbUri = createSquareThumbnailUseCase(uri, 200, thumbFilename, 80)
+//                val savedThumbUri = createSquareThumbnailUseCase(uri, 200, thumbFilename, 80)
 
                 // ---------- 3. 写入数据库（返回 photoId） ----------
                 val photoId = addPhotoUseCase(
                     PhotoModel(
                         tripId = _currentTripId,
                         eventId = classifiedEventId,
-                        thumbnailPath = savedThumbUri.path.toString(),
-                        uploadedToServer = false
+                        localOriginUri = uri.toString()
                     )
                 )
-                // ---------- 4. 调度创建大图的 Worker （异步） ----------
-                taskScheduler.scheduleCreateAndAddLargeImg(
+
+                // ---------- 4. 调度创建并上传大图的 Worker （异步） ----------
+                taskScheduler.scheduleCreateAndUploadLargeImg(
                     uri = uri,
                     photoId = photoId,
                     fileName = largeFilename,
                     compressQuality = 80,
-                    maxSize = 1280
+                    maxSize = 1280,
+                    thumbnailSize = 200
                 )
-
-
             }
         }
     }
@@ -319,6 +318,6 @@ data class LocationTipUiState(
     val tipId: String = "",
     val name: String = "",
     val address: String = "",
-    val latitude: Double=0.0,
-    val longitude: Double=0.0
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0
 )

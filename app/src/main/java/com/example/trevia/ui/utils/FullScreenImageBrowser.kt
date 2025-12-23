@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.res.painterResource
 import com.example.trevia.utils.detectTransformGestures
 import com.example.trevia.utils.tapAndGesture
 import kotlinx.coroutines.launch
@@ -38,25 +39,25 @@ import kotlinx.coroutines.launch
 /**
  * Fullscreen image viewer composable.
  *
- * @param imageUris list of image URIs/URLs (String). You can pass anything accepted by your image loader.
+ * @param imageUrls list of image URLs (String). You can pass anything accepted by your image loader.
  * @param initialIndex the initially selected index in the pager.
  * @param onDismiss called when viewer should be closed.
  */
 @Composable
 fun FullscreenImageBrowser(
-    imageUris: List<Uri>,
+    imageUrls: List<String?>,
     initialIndex: Int = 0,
     onDismiss: () -> Unit
 )
 {
-    if (imageUris.isEmpty()) return
+    if (imageUrls.isEmpty()) return
 
     //拦截系统返回键
     BackHandler {
         onDismiss()
     }
 
-    val pagerState = rememberPagerState(initialPage = initialIndex, pageCount = { imageUris.size })
+    val pagerState = rememberPagerState(initialPage = initialIndex, pageCount = { imageUrls.size })
 
     Box(
         modifier = Modifier
@@ -68,7 +69,7 @@ fun FullscreenImageBrowser(
             modifier = Modifier.fillMaxSize()
         ) { page ->
             ZoomableImage(
-                image = imageUris[page],
+                image = imageUrls[page],
                 onSingleTap = { onDismiss() },
                 onSwipeDownToDismiss = { /* optional: you can call onDismiss() if threshold exceeded */ },
                 modifier = Modifier.fillMaxSize()
@@ -89,7 +90,7 @@ fun FullscreenImageBrowser(
                 modifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                val indexText = "${pagerState.currentPage + 1} / ${imageUris.size}"
+                val indexText = "${pagerState.currentPage + 1} / ${imageUrls.size}"
                 Text(
                     text = indexText,
                     fontSize = 16.sp,
@@ -129,7 +130,7 @@ fun FullscreenImageBrowser(
  */
 @Composable
 fun ZoomableImage(
-    image: Uri,
+    image: String?,
     modifier: Modifier = Modifier,
     onSingleTap: () -> Unit = {},
     onSwipeDownToDismiss: (() -> Unit)? = null
@@ -162,6 +163,8 @@ fun ZoomableImage(
             model = image,
             contentDescription = null,
             contentScale = ContentScale.Fit,
+            placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
+            error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
             modifier = Modifier
                 .fillMaxSize()
                 // apply scale and translation (convert offset to IntOffset)

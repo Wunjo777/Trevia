@@ -1,6 +1,7 @@
 package com.example.trevia.ui.record
 
 import android.app.Notification
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -55,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -62,6 +64,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.example.trevia.R
 import com.example.trevia.ui.imgshow.DragMode
 import com.example.trevia.ui.imgshow.ImgSelectionEvent
@@ -77,7 +81,7 @@ import com.example.trevia.ui.utils.BottomSheetMenu
 import com.example.trevia.ui.utils.FullscreenImageBrowser
 
 data class OpenImagePreview(
-    val imgUris: List<Uri>,
+    val imgUrls: List<String?>,
     val index: Int
 )
 
@@ -90,6 +94,7 @@ fun TripRecordDetailScreen(
     maxImgSelection: Int = 99
 )
 {
+    val context = LocalContext.current
     val tripDetailUiState by tripDetailViewModel.tripDetailUiState.collectAsState()
     val imgShowUiState by imgShowViewModel.imgShowUiState.collectAsState()
     val imgSelectionState by remember { imgShowViewModel.imgSelectionState }
@@ -178,13 +183,14 @@ fun TripRecordDetailScreen(
                     if (hasUnclassified)
                     {
                         UnclassifiedPhotoContent(
+                            context = context,
                             photos = unclassifiedPhotos,
                             imgSelectedIds = imgSelectionState.selectedIds,
                             imgSelectionEnabled = imgSelectionState.enabled,
                             onEvent = imgShowViewModel::imgSelectionEventHandler,
                             onImgClick = { list, idx ->
                                 openImgPreview = OpenImagePreview(
-                                    imgUris = list,
+                                    imgUrls = list,
                                     index = idx
                                 )
                             },
@@ -203,7 +209,8 @@ fun TripRecordDetailScreen(
                         contentPadding = contentPadding
                     ) {
                         items(days, key = { it.dayId }) { day ->
-                            DayItem(
+                             DayItem(
+                                context,
                                 day,
                                 imgShowUiState.groupedPhotos,
                                 imgSelectionState.selectedIds,
@@ -211,7 +218,7 @@ fun TripRecordDetailScreen(
                                 imgShowViewModel::imgSelectionEventHandler,
                                 onImgClick = { list, idx ->
                                     openImgPreview = OpenImagePreview(
-                                        imgUris = list,
+                                        imgUrls = list,
                                         index = idx
                                     )
                                 }
@@ -222,7 +229,7 @@ fun TripRecordDetailScreen(
 
                 openImgPreview?.let { preview ->
                     FullscreenImageBrowser(
-                        imageUris = preview.imgUris,
+                        imageUrls = preview.imgUrls,
                         initialIndex = preview.index,
                         onDismiss = { openImgPreview = null }
                     )
@@ -317,14 +324,17 @@ fun EventSelectBottomSheet(
 
 @Composable
 fun UnclassifiedPhotoContent(
+    context: Context,
     photos: List<PhotoUiState>,
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
-    onImgClick: (List<Uri>, Int) -> Unit,
+    onImgClick: (List<String?>, Int) -> Unit,
     modifier: Modifier = Modifier
 )
 {
+
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -358,7 +368,7 @@ fun UnclassifiedPhotoContent(
                                     else
                                     {
                                         onImgClick(
-                                            photos.map { it.largeImgPath.toUri() },
+                                            photos.map { it.largeImgUrl },
                                             index
                                         )
                                     }
@@ -366,7 +376,13 @@ fun UnclassifiedPhotoContent(
                             )
                         }) {
                     AsyncImage(
-                        model = photo.thumbnailPath.toUri(),
+                        model = remember(photo) {
+                            ImageRequest.Builder(context)
+                                .data(photo.thumbnailUrl ?: photo.localOriginUri) // 优先服务端缩略图，回退本地
+                                .size(200, 200) // 下采样到 200x200
+                                .crossfade(true)
+                                .build()
+                        },
                         placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
                         error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
                         contentDescription = null,
@@ -391,12 +407,13 @@ fun UnclassifiedPhotoContent(
 
 @Composable
 fun DayItem(
+    context: Context,
     day: DayWithEventsUiState,
     groupedPhotos: Map<Long, List<PhotoUiState>>,
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
-    onImgClick: (List<Uri>, Int) -> Unit,
+    onImgClick: (List<String?>, Int) -> Unit,
 )
 {
     val pagerState = rememberPagerState(pageCount = { day.events.size })
@@ -417,7 +434,8 @@ fun DayItem(
                 .fillMaxWidth()
         ) { page ->
             val currentEvent = day.events[page]
-            EventItem(
+             EventItem(
+                context,
                 currentEvent,
                 photos = groupedPhotos[currentEvent.eventId] ?: emptyList(),
                 imgSelectedIds,
@@ -431,12 +449,13 @@ fun DayItem(
 
 @Composable
 fun EventItem(
+    context:Context,
     event: EventUiState,
     photos: List<PhotoUiState>,
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
-    onImgClick: (List<Uri>, Int) -> Unit,
+    onImgClick: (List<String?>, Int) -> Unit,
 )
 {
     Card(
@@ -460,7 +479,8 @@ fun EventItem(
             }
             else
             {
-                ThumbnailsGrid(
+                 ThumbnailsGrid(
+                    context,
                     photos,
                     imgSelectedIds,
                     imgSelectionEnabled,
@@ -474,11 +494,12 @@ fun EventItem(
 
 @Composable
 fun ThumbnailsGrid(
+    context:Context,
     photos: List<PhotoUiState>,
     imgSelectedIds: Set<Long>,
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
-    onImgClick: (List<Uri>, Int) -> Unit,
+    onImgClick: (List<String?>, Int) -> Unit,
     modifier: Modifier = Modifier
 )
 {
@@ -513,13 +534,19 @@ fun ThumbnailsGrid(
                                 }
                                 else
                                 {
-                                    onImgClick(photos.map { it.largeImgPath.toUri() }, index)
+                                    onImgClick(photos.map { it.largeImgUrl}, index)
                                 }
                             }
                         )
                     }) {
                 AsyncImage(
-                    model = photo.thumbnailPath.toUri(),
+                    model =  remember(photo) {
+                        ImageRequest.Builder(context)
+                            .data(photo.thumbnailUrl ?: photo.localOriginUri) // 优先服务端缩略图，回退本地
+                            .size(200, 200) // 下采样到 200x200
+                            .crossfade(true)
+                            .build()
+                    },
                     placeholder = painterResource(android.R.drawable.ic_menu_gallery), // 占位图
                     error = painterResource(android.R.drawable.ic_menu_report_image), // 加载失败图
                     contentDescription = null,

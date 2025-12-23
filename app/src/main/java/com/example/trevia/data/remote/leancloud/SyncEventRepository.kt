@@ -64,7 +64,7 @@ class SyncEventRepository @Inject constructor(
                 val dayObjectId = this.getLCObject<LCObject>("day").objectId
                 dayRepository.getDayIdByLcObjectId(dayObjectId)!!
             }
-            else -1,
+            else -1,//被删除的event下行同步时不再映射本地外键
             location = this.getString("location"),
             address = this.getString("address"),
             latitude = this.getDouble("latitude"),

@@ -13,8 +13,6 @@ class AddPhotoUseCase @Inject constructor(
 {
     suspend operator fun invoke(photoModel: PhotoModel): Long
     {
-        // 文件必须存在
-        require(File(photoModel.thumbnailPath).exists()) { "Thumbnail file does not exist" }
         return photoRepository.addPhoto(photoModel)
     }
 }

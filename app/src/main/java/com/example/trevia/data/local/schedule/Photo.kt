@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.trevia.data.remote.SyncState
 import com.example.trevia.domain.imgupload.model.PhotoModel
+import retrofit2.http.Url
 
 @Entity(
     tableName = "photos",
@@ -29,16 +31,22 @@ data class Photo(
     val id: Long = 0,
     val tripId: Long,
     val eventId: Long?,
-    val largeImgPath: String,
-    val thumbnailPath: String,
-    val uploadedToServer: Boolean
+    val localOriginUri: String?,
+    val largeImgUrl: String?,
+    val thumbnailUrl: String?,
+    val lcObjectId: String?,
+    val syncState: SyncState,
+    val updatedAt: Long
 )
 
 fun Photo.toPhotoModel(): PhotoModel = PhotoModel(
     id = id,
     tripId = tripId,
     eventId = eventId,
-    largeImgPath = largeImgPath,
-    thumbnailPath = thumbnailPath,
-    uploadedToServer = uploadedToServer
+    localOriginUri = localOriginUri,
+    largeImgUrl = largeImgUrl,
+    thumbnailUrl = thumbnailUrl,
+    lcObjectId = lcObjectId,
+    syncState = syncState,
+    updatedAt = updatedAt
 )

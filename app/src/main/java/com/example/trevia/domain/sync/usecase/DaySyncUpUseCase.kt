@@ -5,6 +5,7 @@ import com.example.trevia.data.local.schedule.DayRepository
 import com.example.trevia.data.local.schedule.TripRepository
 import com.example.trevia.data.remote.SyncState
 import com.example.trevia.data.remote.leancloud.SyncDayRepository
+import com.example.trevia.di.OfflineRepo
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -12,7 +13,7 @@ import javax.inject.Singleton
 @Singleton
 class DaySyncUpUseCase @Inject constructor(
     private val dayRepository: DayRepository,
-    private val tripRepository: TripRepository,
+    @OfflineRepo private val tripRepository: TripRepository,
     private val syncDayRepository: SyncDayRepository
 )
 {

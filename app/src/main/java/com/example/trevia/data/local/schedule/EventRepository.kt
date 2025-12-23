@@ -17,6 +17,9 @@ class EventRepository @Inject constructor(private val eventDao: EventDao)
 
     suspend fun updateEvent(eventModel: EventModel) = eventDao.update(eventModel.toEvent())
 
+    suspend fun updateEventWithPending(eventId: Long) = eventDao.updateEventWithPending(eventId)
+
+
     suspend fun updateEventWithUpdatedAt(eventId: Long, updatedAt: Long) = eventDao.updateEventWithUpdatedAt(eventId, updatedAt)
 
     suspend fun updateEventWithLcObjectId(eventId: Long, lcObjectId: String) = eventDao.updateEventWithLcObjectId(eventId, lcObjectId)
@@ -25,9 +28,24 @@ class EventRepository @Inject constructor(private val eventDao: EventDao)
 
     suspend fun deleteEventById(eventId: Long) = eventDao.softDeleteEventById(eventId)
 
-    suspend fun deleteEventsByDayIds(dayIds: List<Long>) = eventDao.softDeleteEventsByDayIds(dayIds)
+    suspend fun deleteEventsByIds(eventIds: List<Long>) = eventDao.softDeleteEventsByIds(eventIds)
 
     suspend fun hardDeleteEventsByObjectIds(objectIds: List<String>) = eventDao.hardDeleteEventsByObjectIds(objectIds)
+
+    suspend fun getEventIdByLcObjectId(lcObjectId: String): Long?
+    {
+        return eventDao.getEventIdByLcObjectId(lcObjectId)
+    }
+
+    suspend fun getEventsByIds(eventIds: List<Long>): List<EventModel>
+    {
+        return eventDao.getEventsByIds(eventIds).map { it.toEventModel() }
+    }
+
+     suspend fun getEventIdsByDayIds(dayIds: List<Long>): List<Long>
+    {
+        return eventDao.getEventIdsByDayIds(dayIds)
+    }
 
     fun getEventsByDayId(dayId: Long): Flow<List<EventModel>>
     {

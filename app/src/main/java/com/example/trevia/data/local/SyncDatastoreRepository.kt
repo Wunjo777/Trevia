@@ -23,6 +23,7 @@ class SyncDatastoreRepository @Inject constructor(
         val TRIP_LAST_SYNC_TIME = longPreferencesKey("trip_last_sync_time")
         val DAY_LAST_SYNC_TIME = longPreferencesKey("day_last_sync_time")
         val EVENT_LAST_SYNC_TIME = longPreferencesKey("event_last_sync_time")
+        val PHOTO_LAST_SYNC_TIME = longPreferencesKey("photo_last_sync_time")
     }
 
     suspend fun getTripLastSyncTime(): Long
@@ -103,6 +104,33 @@ class SyncDatastoreRepository @Inject constructor(
     {
         dataStore.edit { syncTimes ->
             syncTimes[Keys.EVENT_LAST_SYNC_TIME] = time
+        }
+    }
+
+    suspend fun getPhotoLastSyncTime(): Long
+    {
+        return dataStore.data.catch {
+            if (it is IOException)
+            {
+                Log.e("EEE", "Error reading sync times", it)
+                it.printStackTrace()
+                emit(emptyPreferences())
+            }
+            else
+            {
+                throw it
+            }
+        }
+            .map { syncTimes ->
+                syncTimes[Keys.PHOTO_LAST_SYNC_TIME] ?: 0L
+            }
+            .first()
+    }
+
+    suspend fun setPhotoLastSyncTime(time: Long)
+    {
+        dataStore.edit { syncTimes ->
+            syncTimes[Keys.PHOTO_LAST_SYNC_TIME] = time
         }
     }
 }

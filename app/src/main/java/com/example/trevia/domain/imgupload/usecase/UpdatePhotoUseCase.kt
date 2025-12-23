@@ -9,5 +9,7 @@ class UpdatePhotoUseCase @Inject constructor(
     private val photoRepository: PhotoRepository
 )
 {
-    suspend fun updateLargeImgPath(id: Long, largeImgPath: String) = photoRepository.updateLargeImgPath(id, largeImgPath)
+    suspend fun updateLargeImgUrlById(id: Long, largeImgUrl: String) = photoRepository.updateLargeImgUrlById(id, largeImgUrl)
+
+     suspend fun updateThumbnailUrlById(id: Long, thumbnailUrl: String) = photoRepository.updateThumbnailUrlById(id, thumbnailUrl)
 }

@@ -43,8 +43,9 @@ class ImgShowViewModel @Inject constructor(
                 PhotoUiState(
                     photoId = it.id,
                     eventId = it.eventId,
-                    thumbnailPath = it.thumbnailPath,
-                    largeImgPath = it.largeImgPath
+                    localOriginUri = it.localOriginUri,
+                    largeImgUrl = it.largeImgUrl,
+                    thumbnailUrl = it.thumbnailUrl
                 )
             }
             // 按 eventId 对 PhotoUiState 进行分组,未分类是 -1L
@@ -180,6 +181,7 @@ data class ImgShowUiState(val groupedPhotos: Map<Long, List<PhotoUiState>>)
 data class PhotoUiState(
     val photoId: Long,
     val eventId: Long?,
-    val thumbnailPath: String,
-    val largeImgPath: String
+    val localOriginUri: String?,
+    val largeImgUrl: String?,
+    val thumbnailUrl: String?
 )

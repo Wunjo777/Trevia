@@ -9,6 +9,9 @@ class MovePhotosToEventUseCase @Inject constructor(
     private val photoRepository: PhotoRepository
 )
 {
-    suspend operator fun invoke(photoIds: Set<Long>, eventId: Long) =
+    suspend operator fun invoke(photoIds: Set<Long>, eventId: Long)
+    {
         photoRepository.updatePhotosEventId(photoIds, eventId)
+        photoRepository.updatePhotosWithPending(photoIds)
+    }
 }

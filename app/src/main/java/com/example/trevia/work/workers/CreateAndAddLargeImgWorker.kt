@@ -10,14 +10,17 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.trevia.domain.imgupload.usecase.CreateLargeImgUseCase
 import com.example.trevia.domain.imgupload.usecase.UpdatePhotoUseCase
+import com.example.trevia.domain.imgupload.usecase.UploadImgToServerUseCase
+import com.example.trevia.utils.LeanCloudFailureException
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 @HiltWorker
-class CreateAndAddLargeImgWorker @AssistedInject constructor(
+class CreateAndUploadLargeImgWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val createLargeImgUseCase: CreateLargeImgUseCase,
+    private val uploadImgToServerUseCase: UploadImgToServerUseCase,
     private val updatePhotoUseCase: UpdatePhotoUseCase
 ) : CoroutineWorker(context, params)
 {
@@ -29,25 +32,39 @@ class CreateAndAddLargeImgWorker @AssistedInject constructor(
         val fileName = inputData.getString("fileName") ?: return Result.failure()
         val compressQuality = inputData.getInt("compressQuality", 80)
         val maxSize = inputData.getInt("maxSize", 1280)
+        val thumbnailSize = inputData.getInt("thumbnailSize", 200)
 
         return try
         {
-            val largeUri = createLargeImgUseCase(
+            val imgBytes = createLargeImgUseCase(
                 uriString.toUri(),
-                fileName,
                 compressQuality,
                 maxSize
             )
 
+            // upload to server
+            val urlPair = uploadImgToServerUseCase(
+                imgBytes,
+                fileName,
+                thumbnailSize
+            )
+
             // update local DB
-            updatePhotoUseCase.updateLargeImgPath(photoId, largeUri.path.toString())
+            updatePhotoUseCase.updateLargeImgUrlById(photoId, urlPair.first)
+             updatePhotoUseCase.updateThumbnailUrlById(photoId, urlPair.second)
 
             Result.success()
 
-        } catch (e: Exception)
+        } catch (e: LeanCloudFailureException)
         {
+            Log.w("WWW", "LeanCloudFailureException,retrying......", e)
             e.printStackTrace()
             Result.retry()
+        } catch (e: Exception)
+        {
+            Log.w("EEE", "CreateAndUploadLargeImgWorker doWork failed", e)
+            e.printStackTrace()
+            Result.failure()
         }
     }
 }

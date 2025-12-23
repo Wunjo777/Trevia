@@ -4,6 +4,7 @@ import cn.leancloud.LCObject
 import com.example.trevia.data.local.schedule.TripRepository
 import com.example.trevia.data.remote.SyncState
 import com.example.trevia.data.remote.toLcObjectUpdateIsDelete
+import com.example.trevia.di.OfflineRepo
 import com.example.trevia.domain.schedule.model.DayModel
 import com.example.trevia.domain.schedule.model.TripModel
 import com.example.trevia.domain.schedule.model.createNewLcObject
@@ -16,7 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class SyncDayRepository @Inject constructor(
     private val service: LeanCloudService,
-    private val tripRepository: TripRepository
+   @OfflineRepo private val tripRepository: TripRepository
 )
 {
     //注意：day只能新建和删除，不能修改

@@ -1,6 +1,7 @@
 package com.example.trevia.data.remote.leancloud
 
 import android.util.Log
+import cn.leancloud.LCFile
 import cn.leancloud.LCObject
 import cn.leancloud.LCObject.deleteAllInBackground
 import cn.leancloud.LCObject.saveAllInBackground
@@ -100,6 +101,23 @@ class LeanCloudService @Inject constructor()
             cont.invokeOnCancellation { disposable.dispose() }
         }
 
+    suspend fun uploadFile(file: LCFile): LCFile =
+        suspendCancellableCoroutine { cont ->
+            val disposable = file.saveInBackground().subscribe(
+                { lcFile ->
+                    if (cont.isActive) cont.resume(lcFile)
+                },
+                { error ->
+                    if (cont.isActive) cont.resumeWithException(
+                        LeanCloudFailureException(
+                            error.message ?: "LeanCloudFailureException",
+                            error
+                        )
+                    )
+                })
+            cont.invokeOnCancellation { disposable.dispose() }
+        }
+
     suspend fun softDeleteDatas(lcObjects: List<LCObject>): JSONArray =
         suspendCancellableCoroutine { cont ->
             Log.d("syncup", "get inside suspendCancellableCoroutine")
@@ -145,7 +163,8 @@ class LeanCloudService @Inject constructor()
             var cursorDate = lastSyncDate
 
             // 递归分页查询函数
-            fun queryPage() {
+            fun queryPage()
+            {
                 val query = LCQuery<LCObject>(className).apply {
                     whereGreaterThan("updatedAt", cursorDate)
                     orderByAscending("updatedAt")
@@ -154,17 +173,21 @@ class LeanCloudService @Inject constructor()
 
                 val disposable = query.findInBackground().subscribe(
                     { results ->
-                        if (results.isNotEmpty()) {
+                        if (results.isNotEmpty())
+                        {
                             allResults += results
                             cursorDate = results.last().updatedAt
                             queryPage() // 查询下一页
-                        } else {
+                        }
+                        else
+                        {
                             // 查询完成
                             if (cont.isActive) cont.resume(allResults)
                         }
                     },
                     { error ->
-                        if (cont.isActive) {
+                        if (cont.isActive)
+                        {
                             cont.resumeWithException(
                                 LeanCloudFailureException(
                                     error.message ?: "LeanCloudFailureException",

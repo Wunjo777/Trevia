@@ -8,6 +8,9 @@ import javax.inject.Singleton
 @Singleton
 class UpdateEventUseCase @Inject constructor(private val eventRepository: EventRepository)
 {
-    suspend operator fun invoke(eventModel: EventModel) =
+    suspend operator fun invoke(eventModel: EventModel)
+    {
         eventRepository.updateEvent(eventModel)
+        eventRepository.updateEventWithPending(eventModel.id)
+    }
 }
