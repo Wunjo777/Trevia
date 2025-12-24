@@ -1,9 +1,11 @@
 package com.example.trevia.ui.schedule.TripDetail
 
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,10 +47,13 @@ import kotlin.collections.forEach
 import com.example.trevia.domain.imgupload.usecase.DaySummary
 import com.example.trevia.domain.imgupload.usecase.EventSummary
 import com.example.trevia.utils.strToIsoLocalDate
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 
 @HiltViewModel
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class TripDetailViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     getTripWithDaysAndEventsUseCase: GetTripWithDaysAndEventsUseCase,
     getInputTipsUseCase: GetInputTipsUseCase,
@@ -109,7 +114,6 @@ class TripDetailViewModel @Inject constructor(
             events = events.sortedBy { it.startTime }.map {
                 EventUiState(
                     it.id,
-//                    it.dayId,
                     it.location,
                     it.address,
                     it.latitude,
@@ -244,16 +248,26 @@ class TripDetailViewModel @Inject constructor(
 
         uris.forEach { uri ->
             viewModelScope.launch(Dispatchers.IO) {
-                val exifData = parseExifUseCase(uri)
-
-                val classifiedEventId = classifyPhotoUseCase(exifData, dayList, eventList)
-
                 // ---------- 1. 文件名生成 ----------
                 val uriHash = kotlin.math.abs(uri.toString().hashCode())
                 val uuid = java.util.UUID.randomUUID().toString()
                 val baseName = "img_${uriHash}_$uuid"
 //                val thumbFilename = "${baseName}_thumb.jpg"
                 val largeFilename = "${baseName}_large.jpg"
+
+                val internalFile = File(context.cacheDir, "img_${uuid}.jpg")
+                context.contentResolver.openInputStream(uri)!!.use { input ->
+                    internalFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                val internalUri=internalFile.toUri()
+
+                //exif元数据解析
+                val exifData = parseExifUseCase(internalUri)
+
+                //图片根据exif数据分类
+                val classifiedEventId = classifyPhotoUseCase(exifData, dayList, eventList)
 
                 // ---------- 2. 生成缩略图 ----------
 //                val savedThumbUri = createSquareThumbnailUseCase(uri, 200, thumbFilename, 80)
@@ -263,13 +277,13 @@ class TripDetailViewModel @Inject constructor(
                     PhotoModel(
                         tripId = _currentTripId,
                         eventId = classifiedEventId,
-                        localOriginUri = uri.toString()
+                        localOriginUri = internalUri.toString()
                     )
                 )
 
                 // ---------- 4. 调度创建并上传大图的 Worker （异步） ----------
                 taskScheduler.scheduleCreateAndUploadLargeImg(
-                    uri = uri,
+                    uri = internalUri,
                     photoId = photoId,
                     fileName = largeFilename,
                     compressQuality = 80,
@@ -305,7 +319,6 @@ data class DayWithEventsUiState(
 
 data class EventUiState(
     val eventId: Long = 0,
-//    val dayId: Long = 0,
     val location: String = "",
     val address: String = "",
     val latitude: Double = 0.0,

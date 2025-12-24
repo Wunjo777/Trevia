@@ -29,7 +29,7 @@ class PhotoSyncUpUseCase @Inject constructor(
         //确保只有上传完成的照片才会被同步
         val photosUploaded = photos.filter { it.thumbnailUrl != null && it.largeImgUrl != null }
 
-        val eventIds = photosUploaded.map { it.eventId!! }.distinct()
+        val eventIds = photosUploaded.mapNotNull { it.eventId }.distinct()
         val events = eventRepository.getEventsByIds(eventIds)
         val eventMap = events.associateBy { it.id }
 
@@ -43,9 +43,11 @@ class PhotoSyncUpUseCase @Inject constructor(
         }
 
         syncablePhotos = syncablePhotos.filter { photo ->
-            if (photo.eventId == null) return@filter true
-            val event = eventMap[photo.eventId]!!
-            event.syncState != SyncState.DELETED && event.lcObjectId != null
+            // eventId 为 null 的也可以同步
+            photo.eventId?.let { eventId ->
+                val event = eventMap[eventId]
+                event != null && event.syncState != SyncState.DELETED && event.lcObjectId != null
+            } ?: true // eventId == null 时返回 true
         }
 
         val upserts = syncablePhotos.filter { it.syncState == SyncState.PENDING }//新建的
@@ -66,7 +68,7 @@ class PhotoSyncUpUseCase @Inject constructor(
                 syncPhotoRepository.upsertPhotos(upserts.map { photo ->
                     Triple(
                         tripMap[photo.tripId]!!.lcObjectId!!,
-                        photo.eventId?.let { eventMap[it]!!.lcObjectId!! },
+                        photo.eventId?.let { eventMap[it]!!.lcObjectId },
                         photo
                     )
                 })

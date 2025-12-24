@@ -104,23 +104,33 @@ fun EventList(
 }
 
 @Composable
-fun EventItem(event: EventUiState, onClick: (Long) -> Unit)
+fun EventItem(event: EventUiState, onClick: (Long) -> Unit, onLocationClick: () -> Unit = {})
 {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(event.eventId) })
+            .clickable { onClick(event.eventId) }) // 保持事件本身的点击
     {
         Column(
             modifier = Modifier
                 .padding(dimensionResource(R.dimen.padding_small))
                 .fillMaxWidth()
         ) {
-            Text(event.location, style = MaterialTheme.typography.titleMedium)
-            Text(event.address, style = MaterialTheme.typography.bodyMedium)
+            // 将 location 和 address 合在一起作为一个可点击区域
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onLocationClick() } // 点击 location 和 address 的区域
+            ) {
+                Text(event.location, style = MaterialTheme.typography.titleMedium)
+                Text(event.address, style = MaterialTheme.typography.bodyMedium)
+            }
+
+            // 其他内容
             Text(event.timeRange, style = MaterialTheme.typography.bodyMedium)
             Text(event.description, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
+
 

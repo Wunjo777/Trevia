@@ -9,6 +9,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.trevia.ui.location.LocationDetailScreen
 import com.example.trevia.ui.record.TripRecordDetailScreen
 import com.example.trevia.ui.record.TripRecordListScreen
 import com.example.trevia.ui.schedule.AddTripScreen
@@ -46,6 +47,9 @@ fun TreviaNavHost(
                 navigateToAddTrip = { navController.navigate("add_trip") },
                 navigateToTripDetail = { navController.navigate("${TripDetailsDestination.ROUTE}/$it") })
         }
+        composable(LocationDetailDestination.routeWithArgs) {
+            LocationDetailScreen(navigateBack = { navController.popBackStack() })
+        }
         composable("add_trip") {
             AddTripScreen(navigateBack = { navController.popBackStack() })
         }
@@ -56,6 +60,9 @@ fun TreviaNavHost(
             })
         ) {
             TripDetailScreen(
+                navigateToLocationDetail = { navController.navigate(
+                    "${LocationDetailDestination.routeWithArgs}/$locationName/$locationAddress/$latitude/$longitude"
+                ) },
                 navigateBack = { navController.popBackStack() },
                 navigateToEditEvent = { navController.navigate("${EditEventDestination.ROUTE}/$it") })
         }

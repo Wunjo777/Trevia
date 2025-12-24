@@ -51,8 +51,8 @@ interface EventDao
      @Query("SELECT id FROM events WHERE dayId IN (:dayIds)")
     suspend fun getEventIdsByDayIds(dayIds: List<Long>): List<Long>
 
-    @Query("SELECT * FROM events WHERE dayId = :dayId")
-    fun getEventsByDayId(dayId: Long): Flow<List<Event>>
+    @Query("SELECT * FROM events WHERE dayId = :dayId AND syncState != :deleted")
+    fun getEventsByDayId(dayId: Long, deleted: SyncState = SyncState.DELETED): Flow<List<Event>>
 
     @Query("SELECT * FROM events WHERE id = :eventId")
     suspend fun getEventById(eventId: Long): Event?

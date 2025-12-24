@@ -36,8 +36,8 @@ interface DayDao
     @Query("SELECT id FROM days WHERE tripId = :tripId")
     fun getDayIdsByTripId(tripId: Long): List<Long>
 
-    @Query("SELECT * FROM days WHERE tripId = :tripId")
-    fun getDaysByTripId(tripId: Long): Flow<List<Day>>
+    @Query("SELECT * FROM days WHERE tripId = :tripId AND syncState != :deleted")
+    fun getDaysByTripId(tripId: Long, deleted: SyncState = SyncState.DELETED): Flow<List<Day>>
 
     @Query("SELECT * FROM days WHERE lcObjectId IN (:dayObjectIds)")
     fun getDaysByObjectIds(dayObjectIds: List<String>): List<Day>

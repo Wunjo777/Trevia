@@ -43,11 +43,11 @@ interface PhotoDao
     suspend fun getPhotosByObjectIds(objectIds: List<String>): List<Photo>
 
 
-    @Query("SELECT * FROM photos")
-    fun getAllPhotos(): Flow<List<Photo>>
+    @Query("SELECT * FROM photos WHERE syncState != :deleted")
+    fun getAllPhotos(deleted: SyncState = SyncState.DELETED): Flow<List<Photo>>
 
-    @Query("SELECT * FROM photos WHERE tripId = :tripId")
-    fun getPhotosByTripId(tripId: Long): Flow<List<Photo>>
+    @Query("SELECT * FROM photos WHERE tripId = :tripId AND syncState != :deleted")
+    fun getPhotosByTripId(tripId: Long, deleted: SyncState = SyncState.DELETED): Flow<List<Photo>>
 
     @Query("SELECT * FROM photos WHERE id = :photoId")
     suspend fun getPhotoById(photoId: Long): Photo?

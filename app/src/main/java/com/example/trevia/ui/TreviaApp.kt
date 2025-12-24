@@ -17,6 +17,7 @@ import com.example.trevia.ui.navigation.TreviaNavHost
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.trevia.ui.location.LocationDetailScreen
 import com.example.trevia.ui.navigation.AuthNavHost
 import com.example.trevia.ui.navigation.CommonDestination
 
@@ -73,6 +74,7 @@ fun TreviaApp(
     ) { paddingValues ->
         if (isLoggedIn)
         {
+//            LocationDetailScreen()
             TreviaNavHost(navController = navController, modifier = Modifier.padding(paddingValues))
         }
         else

@@ -25,11 +25,15 @@ class PhotoSyncDownWorker @AssistedInject constructor(
             Result.success()
         } catch (e: LeanCloudFailureException)
         {
-            Log.w("WWW", "Fetch photos failed,retrying...", e)
+            val trace = Throwable().stackTrace
+            val caller = trace.getOrNull(1) // 0 是 Throwable 自身，1 是调用 Log 的地方
+            Log.w("WWW", "Fetch photos failed at ${caller?.fileName}:${caller?.lineNumber},retrying...", e)
             Result.retry()
         } catch (e: Exception)
         {
-            Log.e("EEE", "PhotoSyncDownWorker doWork error", e)
+            val trace = Throwable().stackTrace
+            val caller = trace.getOrNull(1) // 0 是 Throwable 自身，1 是调用 Log 的地方
+            Log.e("EEE", "PhotoSyncDownWorker doWork error at ${caller?.fileName}:${caller?.lineNumber}", e)
             Result.failure()
         }
     }

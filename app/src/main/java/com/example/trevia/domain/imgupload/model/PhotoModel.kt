@@ -32,9 +32,7 @@ fun PhotoModel.createNewLcObject(tripObjectId: String, eventObjectId: String? = 
 {
     val lcObject = LCObject("Photo")
     lcObject.put("trip", LCObject.createWithoutData("Trip", tripObjectId))
-    eventObjectId?.let {
-        lcObject.put("event", LCObject.createWithoutData("Event", it))
-    }
+    lcObject.put("event", LCObject.createWithoutData("Event", eventObjectId))
     lcObject.put("largeImgUrl", this.largeImgUrl)
     lcObject.put("thumbnailUrl", this.thumbnailUrl)
     return lcObject

@@ -10,6 +10,7 @@ import cn.leancloud.LCUser
 import cn.leancloud.json.JSONArray
 import com.example.trevia.utils.LeanCloudFailureException
 import com.example.trevia.utils.toUtcMillis
+import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Date
 import javax.inject.Inject
@@ -162,6 +163,13 @@ class LeanCloudService @Inject constructor()
             val allResults = mutableListOf<LCObject>()
             var cursorDate = lastSyncDate
 
+            // ---------- 外层只注册一次取消回调 ----------
+            val disposables = mutableListOf<Disposable>()
+            cont.invokeOnCancellation {
+                // 协程取消时统一处理所有 subscription
+                disposables.forEach { it.dispose() }
+            }
+
             // 递归分页查询函数
             fun queryPage()
             {
@@ -197,9 +205,8 @@ class LeanCloudService @Inject constructor()
                         }
                     }
                 )
-
-                // 协程取消时释放资源
-                cont.invokeOnCancellation { disposable.dispose() }
+                // 保存 disposable，外层取消时统一处理
+                disposables.add(disposable)
             }
 
             // 开始查询第一页
