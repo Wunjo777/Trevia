@@ -24,6 +24,7 @@ data class Event(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val dayId: Long,
+    val poiId: String,
     val location: String,
     val address: String,
     val latitude: Double,
@@ -39,6 +40,7 @@ data class Event(
 fun Event.toEventModel() = EventModel(
     id = this.id,
     dayId = this.dayId,
+    poiId = this.poiId,
     location = this.location,
     address = this.address,
     latitude = this.latitude,

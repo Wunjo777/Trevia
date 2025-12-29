@@ -74,7 +74,6 @@ fun TreviaApp(
     ) { paddingValues ->
         if (isLoggedIn)
         {
-//            LocationDetailScreen()
             TreviaNavHost(navController = navController, modifier = Modifier.padding(paddingValues))
         }
         else

@@ -1,6 +1,8 @@
 package com.example.trevia.ui.navigation
 
+import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -47,7 +49,23 @@ fun TreviaNavHost(
                 navigateToAddTrip = { navController.navigate("add_trip") },
                 navigateToTripDetail = { navController.navigate("${TripDetailsDestination.ROUTE}/$it") })
         }
-        composable(LocationDetailDestination.routeWithArgs) {
+        composable(
+            route = LocationDetailDestination.routeWithArgs,
+            arguments = listOf(
+                navArgument(LocationDetailDestination.LOCATION_NAME_ARG) {
+                    type = NavType.StringType
+                },
+                navArgument(LocationDetailDestination.LOCATION_ADDRESS_ARG) {
+                    type = NavType.StringType
+                },
+                navArgument(LocationDetailDestination.LOCATION_LATITUDE_ARG) {
+                    type = NavType.StringType
+                },
+                navArgument(LocationDetailDestination.LOCATION_LONGITUDE_ARG) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
             LocationDetailScreen(navigateBack = { navController.popBackStack() })
         }
         composable("add_trip") {
@@ -60,9 +78,15 @@ fun TreviaNavHost(
             })
         ) {
             TripDetailScreen(
-                navigateToLocationDetail = { navController.navigate(
-                    "${LocationDetailDestination.routeWithArgs}/$locationName/$locationAddress/$latitude/$longitude"
-                ) },
+                navigateToLocationDetail = { poiId, locationName, locationAddress, latitude, longitude ->
+                    navController.navigate(
+                        "${LocationDetailDestination.ROUTE}/${Uri.encode(poiId)}/${Uri.encode(locationName)}/${
+                            Uri.encode(
+                                locationAddress
+                            )
+                        }/${Uri.encode(latitude.toString())}/${Uri.encode(longitude.toString())}"
+                    )
+                },
                 navigateBack = { navController.popBackStack() },
                 navigateToEditEvent = { navController.navigate("${EditEventDestination.ROUTE}/$it") })
         }

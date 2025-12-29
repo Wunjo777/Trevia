@@ -27,6 +27,7 @@ class SyncEventRepository @Inject constructor(
             )
         })
     }
+
     suspend fun softDeleteEvents(eventModels: List<EventModel>): Map<Long, String>
     {
         val responses = service.softDeleteDatas(eventModels.map {
@@ -65,6 +66,7 @@ class SyncEventRepository @Inject constructor(
                 dayRepository.getDayIdByLcObjectId(dayObjectId)!!
             }
             else -1,//被删除的event下行同步时不再映射本地外键
+            poiId = this.getString("poiId"),
             location = this.getString("location"),
             address = this.getString("address"),
             latitude = this.getDouble("latitude"),

@@ -9,6 +9,7 @@ import java.time.LocalTime
 data class EventModel(
     val id: Long = 0,
     val dayId: Long,
+    val poiId: String,
     val location: String,
     val address: String,
     val latitude: Double,
@@ -26,6 +27,7 @@ fun EventModel.toEvent(): Event
     return Event(
         id = this.id,
         dayId = this.dayId,
+        poiId = this.poiId,
         location = this.location,
         address = this.address,
         latitude = this.latitude,

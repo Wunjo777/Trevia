@@ -9,7 +9,7 @@ import com.example.trevia.data.utils.SyncStateConverter
 
 @Singleton
 @TypeConverters(SyncStateConverter::class)
-@Database(entities = [Trip::class, Day::class, Event::class, Photo::class], version = 14, exportSchema = false)
+@Database(entities = [Trip::class, Day::class, Event::class, Photo::class, PoiWeatherCache::class], version = 15, exportSchema = false)
 abstract class ScheduleDatabase : RoomDatabase()
 {
     abstract fun tripDao(): TripDao
@@ -19,4 +19,6 @@ abstract class ScheduleDatabase : RoomDatabase()
     abstract fun eventDao(): EventDao
 
     abstract fun photoDao(): PhotoDao
+
+    abstract fun poiWeatherCacheDao(): PoiWeatherCacheDao
 }

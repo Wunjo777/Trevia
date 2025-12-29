@@ -40,6 +40,7 @@ fun ExpandedSheetContent(
     tripDetailUiState: TripDetailUiState.Success,
     onDeleteEvent: (Long) -> Unit,
     onClickEvent: (Long) -> Unit,
+    onLocationClick: (String,String, String, Double, Double) -> Unit,
     onSelectedDayChange: (Long?) -> Unit,
     onAddEventChange: (Boolean) -> Unit
 )
@@ -82,7 +83,8 @@ fun ExpandedSheetContent(
                     EventList(
                         selectedDay.events,
                         onDeleteEvent = onDeleteEvent,
-                        onClickEvent = onClickEvent
+                        onClickEvent = onClickEvent,
+                        onLocationClick = onLocationClick
                     )
                 }
                 else

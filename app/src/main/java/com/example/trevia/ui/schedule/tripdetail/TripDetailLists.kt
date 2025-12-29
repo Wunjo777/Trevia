@@ -84,7 +84,8 @@ fun DayItem(
 fun EventList(
     events: List<EventUiState>,
     onDeleteEvent: (Long) -> Unit,
-    onClickEvent: (Long) -> Unit
+    onClickEvent: (Long) -> Unit,
+    onLocationClick: (String,String, String, Double, Double) -> Unit
 )
 {
     LazyColumn(
@@ -96,7 +97,7 @@ fun EventList(
             SwipeToDismissItem(
                 itemId = event.eventId,
                 onDeleteItem = { onDeleteEvent(it) },
-                content = { EventItem(event, onClick = onClickEvent) },
+                content = { EventItem(event, onClick = onClickEvent, onLocationClick = onLocationClick) },
                 modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
             )
         }
@@ -104,7 +105,11 @@ fun EventList(
 }
 
 @Composable
-fun EventItem(event: EventUiState, onClick: (Long) -> Unit, onLocationClick: () -> Unit = {})
+fun EventItem(
+    event: EventUiState,
+    onClick: (Long) -> Unit,
+    onLocationClick: (String,String, String, Double, Double) -> Unit
+)
 {
     Card(
         modifier = Modifier
@@ -120,7 +125,7 @@ fun EventItem(event: EventUiState, onClick: (Long) -> Unit, onLocationClick: () 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onLocationClick() } // 点击 location 和 address 的区域
+                    .clickable { onLocationClick(event.poiId,event.location,event.address,event.latitude,event.longitude) } // 点击 location 和 address 的区域
             ) {
                 Text(event.location, style = MaterialTheme.typography.titleMedium)
                 Text(event.address, style = MaterialTheme.typography.bodyMedium)

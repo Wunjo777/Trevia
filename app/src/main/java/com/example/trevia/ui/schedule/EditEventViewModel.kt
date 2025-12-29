@@ -75,6 +75,7 @@ private fun EventModel.toEventInfoUiState(): EventInfoUiState
     return EventInfoUiState(
         id = id,
         dayId = dayId,
+        poiId = poiId,
         location = location,
         address = address,
         latitude = latitude,
@@ -90,6 +91,7 @@ private fun EventInfoUiState.toEventModel(): EventModel
     return EventModel(
         id = id,
         dayId = dayId,
+        poiId = poiId,
         location = location,
         address = address,
         latitude = latitude,
@@ -103,6 +105,7 @@ private fun EventInfoUiState.toEventModel(): EventModel
 data class EventInfoUiState(
     val id: Long = 0,
     val dayId: Long = 0,
+    val poiId: String = "",
     val location: String = "",
     val address: String = "",
     val latitude: Double = 0.0,

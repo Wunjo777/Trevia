@@ -114,6 +114,7 @@ class TripDetailViewModel @Inject constructor(
             events = events.sortedBy { it.startTime }.map {
                 EventUiState(
                     it.id,
+                    it.poiId,
                     it.location,
                     it.address,
                     it.latitude,
@@ -157,6 +158,7 @@ class TripDetailViewModel @Inject constructor(
 
     fun addEventByLocation(
         dayId: Long,
+        poiId: String,
         locationName: String,
         address: String,
         latitude: Double,
@@ -165,6 +167,7 @@ class TripDetailViewModel @Inject constructor(
     {
         val eventModel = EventModel(
             dayId = dayId,
+            poiId = poiId,
             location = locationName,
             address = address,
             latitude = latitude,
@@ -319,6 +322,7 @@ data class DayWithEventsUiState(
 
 data class EventUiState(
     val eventId: Long = 0,
+    val poiId: String = "",
     val location: String = "",
     val address: String = "",
     val latitude: Double = 0.0,

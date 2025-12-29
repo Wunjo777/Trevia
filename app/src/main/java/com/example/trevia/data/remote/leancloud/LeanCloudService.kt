@@ -102,6 +102,25 @@ class LeanCloudService @Inject constructor()
             cont.invokeOnCancellation { disposable.dispose() }
         }
 
+    suspend fun upsertData(lcObject: LCObject) =
+        suspendCancellableCoroutine { cont ->
+            val disposable = lcObject.saveInBackground().subscribe(
+                {
+                    if (cont.isActive) cont.resume(Unit)
+                },
+                { error ->
+                    if (cont.isActive) cont.resumeWithException(
+                        LeanCloudFailureException(
+                            error.message ?: "LeanCloudFailureException",
+                            error
+                        )
+                    )
+                })
+            cont.invokeOnCancellation {
+                disposable.dispose()
+            }
+        }
+
     suspend fun uploadFile(file: LCFile): LCFile =
         suspendCancellableCoroutine { cont ->
             val disposable = file.saveInBackground().subscribe(
@@ -212,6 +231,63 @@ class LeanCloudService @Inject constructor()
             // 开始查询第一页
             queryPage()
         }
+
+    suspend fun getLocationImageMetaByPoiId(
+        poiId: String
+    ): List<LCObject> =
+        suspendCancellableCoroutine { cont ->
+
+            val allResults = mutableListOf<LCObject>()
+
+            // ---------- 外层只注册一次取消回调 ----------
+            val disposables = mutableListOf<Disposable>()
+            cont.invokeOnCancellation {
+                disposables.forEach { it.dispose() }
+            }
+
+            // 递归分页查询函数
+            fun queryPage(skip: Int) {
+                val query = LCQuery<LCObject>("LocationImageMeta").apply {
+                    // 只查询 poiId 相等的对象
+                    whereEqualTo("poiId", poiId)
+
+                    // 分页参数
+                    limit = 100
+                    this.skip = skip
+                }
+
+                val disposable = query.findInBackground().subscribe(
+                    { results ->
+                        if (!cont.isActive) return@subscribe
+
+                        if (results.isNotEmpty()) {
+                            allResults += results
+                            // 下一页：skip 累加
+                            queryPage(skip + results.size)
+                        } else {
+                            // 查询完成
+                            cont.resume(allResults)
+                        }
+                    },
+                    { error ->
+                        if (cont.isActive) {
+                            cont.resumeWithException(
+                                LeanCloudFailureException(
+                                    error.message ?: "LeanCloudFailureException",
+                                    error
+                                )
+                            )
+                        }
+                    }
+                )
+
+                disposables.add(disposable)
+            }
+
+            // 从第一页开始
+            queryPage(skip = 0)
+        }
+
 
     fun logOut()
     {

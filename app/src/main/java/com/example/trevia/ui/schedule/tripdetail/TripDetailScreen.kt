@@ -42,6 +42,7 @@ import com.example.trevia.domain.amap.model.toLocationTipUiState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetailScreen(
+    navigateToLocationDetail: (String,String, String, Double, Double) -> Unit,
     navigateBack: () -> Unit,
     navigateToEditEvent: (Long) -> Unit,
     tripDetailViewModel: TripDetailViewModel = hiltViewModel()
@@ -94,7 +95,8 @@ fun TripDetailScreen(
                         onDeleteEvent = tripDetailViewModel::deleteEventById,
                         onClickEvent = navigateToEditEvent,
                         onSelectedDayChange = { tripDetailViewModel.onSelectedDayChange(it) },
-                        onAddEventChange = { isAddingEvent = it }
+                        onAddEventChange = { isAddingEvent = it },
+                        onLocationClick = navigateToLocationDetail
                     )
                 }
             }
@@ -134,7 +136,7 @@ fun LocationSearchContent(
     onAddEventChange: (Boolean) -> Unit,
     onKeywordChanged: (String) -> Unit,
     keyword: String,
-    onTipClick: ( dayId: Long, locationName: String, address: String, latitude: Double, longitude: Double) -> Unit,
+    onTipClick: ( dayId: Long, poiId: String, locationName: String, address: String, latitude: Double, longitude: Double) -> Unit,
     tips: List<LocationTipUiState>,
 )
 {
@@ -153,8 +155,8 @@ fun LocationSearchContent(
             onKeywordChanged = onKeywordChanged,
             keyword = keyword,
             tips = tips,
-            onTipClick = { locationName, address, latitude, longitude ->
-                onTipClick(dayId, locationName, address, latitude, longitude)
+            onTipClick = {poiId, locationName, address, latitude, longitude ->
+                onTipClick(dayId, poiId, locationName, address, latitude, longitude)
             },
             modifier = Modifier.align(
                 Alignment.BottomCenter
@@ -169,7 +171,7 @@ fun SearchLocationBar(
     onKeywordChanged: (String) -> Unit,
     keyword: String,
     tips: List<LocationTipUiState>,
-    onTipClick: (locationName: String, address: String, latitude: Double, longitude: Double) -> Unit,
+    onTipClick: (poiId: String, locationName: String, address: String, latitude: Double, longitude: Double) -> Unit,
     modifier: Modifier = Modifier
 )
 {
@@ -271,7 +273,7 @@ fun SearchLocationBar(
                     modifier = Modifier
                         .padding(dimensionResource(R.dimen.padding_small))
                         .clickable {
-                            onTipClick(tip.name, tip.address,tip.latitude,tip.longitude)
+                            onTipClick(tip.tipId,tip.name, tip.address,tip.latitude,tip.longitude)
                             onClose()
                         }) {
                     Text(
@@ -324,6 +326,7 @@ fun TripDetailSheetContent(
     scaffoldState: BottomSheetScaffoldState,
     onDeleteEvent: (Long) -> Unit,
     onClickEvent: (Long) -> Unit,
+    onLocationClick: (String,String, String, Double, Double) -> Unit,
     onSelectedDayChange: (Long?) -> Unit,
     onAddEventChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -344,6 +347,7 @@ fun TripDetailSheetContent(
                 tripDetailUiState = tripDetailUiState,
                 onDeleteEvent = onDeleteEvent,
                 onClickEvent = onClickEvent,
+                onLocationClick = onLocationClick,
                 onSelectedDayChange = onSelectedDayChange,
                 onAddEventChange = onAddEventChange,
             )
