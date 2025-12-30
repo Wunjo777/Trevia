@@ -58,4 +58,9 @@ object DatabaseModule
     {
         return db.photoDao()
     }
+
+    @Provides
+    @Singleton
+    fun providePoiWeatherCacheDao(db: ScheduleDatabase) =
+        db.poiWeatherCacheDao()
 }

@@ -1,6 +1,7 @@
 package com.example.trevia.data.remote.amap
 
 import android.content.Context
+import android.util.Log
 import com.amap.api.services.core.PoiItem
 import com.amap.api.services.help.Inputtips
 import com.amap.api.services.help.InputtipsQuery
@@ -80,38 +81,68 @@ class AMapService(private val context: Context)
     suspend fun getLiveWeather(city: String): LocalWeatherLive =
         suspendCancellableCoroutine { cont ->
 
-            // 构造查询参数：城市 + 实况天气
+            Log.d("AMapWeather", "🌤 start getLiveWeather, city=$city")
+
             val query = WeatherSearchQuery(
                 city,
                 WeatherSearchQuery.WEATHER_TYPE_LIVE
+            )
+
+            Log.d(
+                "AMapWeather",
+                "WeatherSearchQuery created: city=${query.city}, type=${query.type}"
             )
 
             val weatherSearch = WeatherSearch(context)
             weatherSearch.query = query
 
             cont.invokeOnCancellation {
-                // 防止回调泄漏
+                Log.w("AMapWeather", "Coroutine cancelled, remove listener")
                 weatherSearch.setOnWeatherSearchListener(null)
             }
 
             weatherSearch.setOnWeatherSearchListener(
-                object : WeatherSearch.OnWeatherSearchListener
-                {
+                object : WeatherSearch.OnWeatherSearchListener {
+
                     override fun onWeatherLiveSearched(
                         result: LocalWeatherLiveResult?,
                         rCode: Int
-                    )
-                    {
-                        if (!cont.isActive) return
+                    ) {
+                        Log.d(
+                            "AMapWeather",
+                            "onWeatherLiveSearched called, rCode=$rCode, result=$result"
+                        )
 
-                        if (rCode == 1000 && result?.liveResult != null)
-                        {
-                            cont.resume(result.liveResult!!)
+                        if (!cont.isActive) {
+                            Log.w("AMapWeather", "Continuation not active, ignore callback")
+                            return
                         }
-                        else
-                        {
+
+                        if (rCode == 1000 && result?.liveResult != null) {
+                            val live = result.liveResult
+                            Log.d(
+                                "AMapWeather",
+                                """
+                            🌈 Weather success:
+                            city=${live.city}
+                            weather=${live.weather}
+                            temp=${live.temperature}
+                            wind=${live.windDirection} ${live.windPower}
+                            reportTime=${live.reportTime}
+                            """.trimIndent()
+                            )
+
+                            cont.resume(live)
+                        } else {
+                            Log.e(
+                                "AMapWeather",
+                                "❌ Weather failed: rCode=$rCode, liveResult=${result?.liveResult}"
+                            )
+
                             cont.resumeWithException(
-                                Exception("高德天气查询失败，错误码: $rCode")
+                                Exception(
+                                    "高德天气查询失败，错误码: $rCode, city=$city"
+                                )
                             )
                         }
                     }
@@ -119,13 +150,17 @@ class AMapService(private val context: Context)
                     override fun onWeatherForecastSearched(
                         result: LocalWeatherForecastResult?,
                         rCode: Int
-                    )
-                    {
-                        // 实况天气不使用
+                    ) {
+                        Log.d(
+                            "AMapWeather",
+                            "onWeatherForecastSearched ignored, rCode=$rCode"
+                        )
                     }
                 }
             )
-            // 异步发起天气查询
+
+            Log.d("AMapWeather", "🔍 call searchWeatherAsyn()")
             weatherSearch.searchWeatherAsyn()
         }
+
 }

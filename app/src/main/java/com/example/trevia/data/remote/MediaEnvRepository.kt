@@ -25,6 +25,15 @@ class MediaEnvRepository @Inject constructor(
         }
     }
 
+    fun isNetworkAvailable(): Boolean
+    {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val caps = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
     fun isVisible(): Boolean {
         // 简单演示，实际可由 Fragment / RecyclerView 回调
         return true

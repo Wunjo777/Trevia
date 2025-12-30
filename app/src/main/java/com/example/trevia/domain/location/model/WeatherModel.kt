@@ -1,4 +1,4 @@
-package com.example.trevia.domain.amap.model
+package com.example.trevia.domain.location.model
 
 data class WeatherModel(
     val weather: String,        // 天气情况

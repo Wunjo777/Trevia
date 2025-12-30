@@ -1,10 +1,11 @@
 package com.example.trevia.ui.location
 
-import android.util.Log
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,8 +23,8 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -31,9 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +40,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.trevia.domain.location.model.CommentModel
+import com.example.trevia.domain.location.model.PoiDetailModel
+import com.example.trevia.domain.location.model.WeatherModel
+import com.example.trevia.domain.location.model.ModuleState
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationDetailScreen(
@@ -50,6 +54,7 @@ fun LocationDetailScreen(
     navigateBack: () -> Unit
 )
 {
+    val uiState by vm.uiState.collectAsState()
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = PickMultipleVisualMedia(maxImgSelection),
     ) { uris ->
@@ -329,71 +334,58 @@ fun LocationDetailScreen(
 
                             Spacer(Modifier.height(8.dp))
 
-                            val reviews = listOf(
-                                Pair("小张", "很棒的景点！推荐上午去，人不太多。"),
-                                Pair("小李", "环境优美，值得一去。带父母很合适。"),
-                                Pair("小王", "游客较多，周末注意避开高峰。")
-                            )
+                            when (val commentState = uiState.commentState)
+                            {
 
-                            reviews.forEachIndexed { idx, (name, text) ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Person,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-
-                                    Spacer(Modifier.width(12.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(name, fontWeight = FontWeight.Bold)
-                                            Spacer(Modifier.width(8.dp))
-                                            Icon(
-                                                Icons.Filled.Star,
-                                                contentDescription = null,
-                                                tint = Color(0xFFFFD700),
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Text(
-                                                "4.5",
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colorScheme.onSurface.copy(
-                                                    alpha = 0.7f
-                                                )
-                                            )
-                                        }
-                                        Spacer(Modifier.height(6.dp))
-                                        Text(
-                                            text,
-                                            fontSize = 14.sp,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                                        )
-                                    }
-                                }
-
-                                if (idx < reviews.size - 1)
+                                is ModuleState.Loading  ->
                                 {
-                                    Divider(
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                                    Text(
+                                        "正在加载评论…",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
                                 }
+
+                                is ModuleState.Error    ->
+                                {
+                                    Text(
+                                        "评论加载失败：${commentState.failure.message}",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+
+                                is ModuleState.Degraded ->
+                                {
+                                    Text(
+                                        "评论暂不可用（${commentState.reason.name}）",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+
+                                is ModuleState.Success  ->
+                                {
+                                    val comments = commentState.data
+                                    if (comments.isEmpty())
+                                    {
+                                        Text(
+                                            "暂无用户评论，快来抢沙发吧～",
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(
+                                                alpha = 0.6f
+                                            )
+                                        )
+                                    }
+                                    else
+                                    {
+                                        comments.forEach { comment ->
+                                            CommentContent(comment)
+                                        }
+                                    }
+                                }
                             }
+
                         }
                     }
 
@@ -430,77 +422,45 @@ fun LocationDetailScreen(
                             Text("景点信息", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.height(8.dp))
-                        // 两列信息
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.Filled.LocationOn,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("地址", fontWeight = FontWeight.SemiBold)
-                                    }
-                                    Text(
-                                        "深圳市南山区 XXX",
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
-                                    )
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.Filled.Call,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("电话", fontWeight = FontWeight.SemiBold)
-                                    }
-                                    Text("123-456-7890", fontSize = 14.sp)
-                                }
+
+                        when (uiState.poiState)
+                        {
+                            is ModuleState.Loading  ->
+                            {
+                                Text("正在加载景点信息...", fontSize = 14.sp)
                             }
-                            Spacer(Modifier.height(10.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.Filled.Schedule,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("开放时间", fontWeight = FontWeight.SemiBold)
-                                    }
-                                    Text("09:00 - 18:00", fontSize = 14.sp)
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.Filled.TrendingUp,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("人气", fontWeight = FontWeight.SemiBold)
-                                    }
-                                    Text("高峰期: 周末", fontSize = 14.sp)
-                                }
+
+                            is ModuleState.Error    ->
+                            {
+                                val error = uiState.poiState as ModuleState.Error
+                                Text(
+                                    "错误码：${error.failure.code}，错误信息：${error.failure.message}",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+
+                            is ModuleState.Degraded ->
+                            {
+                                val poiStateSnapshot = uiState.poiState as ModuleState.Degraded
+                                Text(
+                                    "景点信息暂时不可用，原因：${poiStateSnapshot.reason.name}。",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+
+                            is ModuleState.Success  ->
+                            {
+                                val poiStateSnapshot = uiState.poiState as ModuleState.Success
+                                PoiDetailContent(poiStateSnapshot.data)
                             }
                         }
                     }
                 }
             }
 
-            // 5. 当地天气信息（渐变背景）
+            // 5. 当地天气信息（基于 ModuleState）
             item {
                 Card(
                     modifier = Modifier
@@ -510,96 +470,31 @@ fun LocationDetailScreen(
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(6.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color(0xFF8EC5FF),
-                                        Color(0xFFE0C3FC)
-                                    )
-                                ),
-                                shape = MaterialTheme.shapes.medium
-                            )
-                            .padding(16.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "当地天气",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Text("晴", fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    "25°C",
-                                    fontSize = 28.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    "18°C",
-                                    fontSize = 14.sp,
-                                    color = Color.White.copy(alpha = 0.9f)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+                    when (val weatherState = uiState.weatherState)
+                    {
 
-            // 6. 官方媒体账号（图标按钮行）
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    elevation = CardDefaults.cardElevation(6.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Outlined.Public,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text("官方媒体账号", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        is ModuleState.Loading  ->
+                        {
+                            WeatherPlaceholder("正在加载天气…")
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            IconButton(onClick = { /* 微信 */ }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Filled.Message, contentDescription = "微信")
-                                    Spacer(Modifier.height(4.dp))
-                                    Text("微信", fontSize = 12.sp)
-                                }
-                            }
-                            IconButton(onClick = { /* 微博 */ }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Filled.Public, contentDescription = "微博")
-                                    Spacer(Modifier.height(4.dp))
-                                    Text("微博", fontSize = 12.sp)
-                                }
-                            }
-                            IconButton(onClick = { /* 抖音 */ }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Filled.Videocam, contentDescription = "抖音")
-                                    Spacer(Modifier.height(4.dp))
-                                    Text("抖音", fontSize = 12.sp)
-                                }
-                            }
+
+                        is ModuleState.Error    ->
+                        {
+                            WeatherPlaceholder(
+                                "天气加载失败：${weatherState.failure.message}"
+                            )
+                        }
+
+                        is ModuleState.Degraded ->
+                        {
+                            WeatherPlaceholder(
+                                "天气暂不可用（${weatherState.reason.name}）"
+                            )
+                        }
+
+                        is ModuleState.Success  ->
+                        {
+                            WeatherContent(weatherState.data)
                         }
                     }
                 }
@@ -649,9 +544,212 @@ fun LocationDetailScreen(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun LocationDetailScreenPreview()
+fun PoiDetailContent(data: PoiDetailModel)
 {
-    LocationDetailScreen(navigateBack = {})
+    // 两列信息
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.LocationOn,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("地址", fontWeight = FontWeight.SemiBold)
+                }
+                Text(
+                    data.address,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Call,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("电话", fontWeight = FontWeight.SemiBold)
+                }
+                Text(data.tel, fontSize = 14.sp)
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Schedule,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("邮箱/邮编", fontWeight = FontWeight.SemiBold)
+                }
+                Text(data.email + " " + data.postCode, fontSize = 14.sp)
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.TrendingUp,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("网址", fontWeight = FontWeight.SemiBold)
+                }
+                Text(data.website, fontSize = 14.sp)
+            }
+        }
+    }
 }
+
+@Composable
+fun WeatherContent(data: WeatherModel)
+{
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        Color(0xFF8EC5FF),
+                        Color(0xFFE0C3FC)
+                    )
+                ),
+                shape = MaterialTheme.shapes.medium
+            )
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "当地天气",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "${data.weather} · 湿度 ${data.humidity}%",
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+                Text(
+                    "${data.windDirection}风 ${data.windPower}",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    "${data.temperature}°C",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
+                )
+                Text(
+                    "更新时间 ${data.reportTime}",
+                    fontSize = 11.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WeatherPlaceholder(text: String)
+{
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .background(
+                Color.LightGray.copy(alpha = 0.25f),
+                shape = MaterialTheme.shapes.medium
+            )
+            .padding(16.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
+fun CommentContent(comment: CommentModel)
+{
+// ===== 单条评论 UI =====
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(
+                        alpha = 0.2f
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Filled.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+
+            Text(
+                "游客评价",
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                comment.content,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = 0.9f
+                )
+            )
+        }
+    }
+}
+
+//@Preview(showBackground = true)
+//@Composable
+//fun LocationDetailScreenPreview()
+//{
+//    LocationDetailScreen(navigateBack = {})
+//}

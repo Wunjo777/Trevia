@@ -26,8 +26,7 @@ data class VideoHit(
 data class VideoUrls(
     val large: VideoFile,
     val medium: VideoFile,
-    val small: VideoFile,
-    val tiny: VideoFile
+    val small: VideoFile
 )
 
 @Serializable

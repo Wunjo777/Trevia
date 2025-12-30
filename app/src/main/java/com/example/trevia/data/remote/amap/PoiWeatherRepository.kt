@@ -4,9 +4,9 @@ import com.amap.api.services.core.PoiItem
 import com.amap.api.services.weather.LocalWeatherLive
 import com.example.trevia.data.local.schedule.PoiWeatherCache
 import com.example.trevia.data.local.schedule.PoiWeatherCacheDao
-import com.example.trevia.domain.amap.model.PoiDetailModel
+import com.example.trevia.domain.location.model.PoiDetailModel
 import com.example.trevia.domain.amap.model.PoiWithWeatherModel
-import com.example.trevia.domain.amap.model.WeatherModel
+import com.example.trevia.domain.location.model.WeatherModel
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,7 +16,7 @@ class PoiWeatherRepository @Inject constructor(
     private val cacheDao: PoiWeatherCacheDao
 ) {
 
-    private val cacheTimeoutMs = 30 * 60_000L // 缓存有效期 30 分钟
+    private val cacheTimeoutMs = 1 * 60_000L // 缓存有效期 30 分钟
 
     suspend fun getPoiWithWeather(poiId: String): PoiWithWeatherModel {
         val now = System.currentTimeMillis()
@@ -46,8 +46,8 @@ class PoiWeatherRepository @Inject constructor(
 
         // 2. 缓存不存在或过期 → 从 API 获取
         val poiItem = aMapService.getPoiById(poiId)
-        val cityCode = poiItem.adCode ?: throw Exception("POI 缺少城市编码信息")
-        val weatherLive = aMapService.getLiveWeather(cityCode)
+        val city = poiItem.cityName ?: throw Exception("POI 缺少城市编码信息")
+        val weatherLive = aMapService.getLiveWeather(city)
 
         val poiModel = poiItem.toPoiDetailModel()
         val weatherModel = weatherLive.toWeatherModel()

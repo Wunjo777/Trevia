@@ -232,8 +232,9 @@ class LeanCloudService @Inject constructor()
             queryPage()
         }
 
-    suspend fun getLocationImageMetaByPoiId(
-        poiId: String
+    suspend fun getLocationDataByPoiId(
+        poiId: String,
+        className:String
     ): List<LCObject> =
         suspendCancellableCoroutine { cont ->
 
@@ -247,7 +248,7 @@ class LeanCloudService @Inject constructor()
 
             // 递归分页查询函数
             fun queryPage(skip: Int) {
-                val query = LCQuery<LCObject>("LocationImageMeta").apply {
+                val query = LCQuery<LCObject>(className).apply {
                     // 只查询 poiId 相等的对象
                     whereEqualTo("poiId", poiId)
 

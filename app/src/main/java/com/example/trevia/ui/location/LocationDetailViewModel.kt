@@ -1,33 +1,25 @@
 package com.example.trevia.ui.location
 
-import android.R
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.trevia.domain.amap.model.PoiDetailModel
-import com.example.trevia.domain.amap.model.WeatherModel
+import com.example.trevia.domain.location.model.PoiDetailModel
+import com.example.trevia.domain.location.model.WeatherModel
 import com.example.trevia.domain.imgupload.usecase.CreateLargeImgUseCase
 import com.example.trevia.domain.imgupload.usecase.UploadImgToServerUseCase
 import com.example.trevia.domain.location.LocationDetailOrchestratorUseCase
 import com.example.trevia.domain.location.UploadLocationCommentUseCase
 import com.example.trevia.domain.location.UploadLocationImgMetaUseCase
-import com.example.trevia.domain.location.model.DegradeReason
-import com.example.trevia.domain.location.model.DomainFailure
+import com.example.trevia.domain.location.model.CommentModel
 import com.example.trevia.domain.location.model.ModuleState
-import com.example.trevia.domain.location.model.PoiDecision
-import com.example.trevia.domain.location.model.PoiTextLevel
 import com.example.trevia.ui.navigation.LocationDetailDestination
-import com.example.trevia.work.TaskScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -58,12 +50,17 @@ class LocationDetailViewModel @Inject constructor(
     val uiState: StateFlow<LocationDetailUiState> =
         _uiState.asStateFlow()
 
+    init
+    {
+        load()
+    }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     fun onImageSelected(uris: List<Uri>)
     {
         val compressQuality = 80
         val maxSize = 1280
-        val fileName = "location_$location.jpg"
+        val fileName = "location_$poiId.jpg"
         uris.forEach { uri ->
             viewModelScope.launch {
                 val imgBytes = createLargeImgUseCase(
@@ -98,46 +95,18 @@ class LocationDetailViewModel @Inject constructor(
     fun load()
     {
         viewModelScope.launch {
-            try
-            {
-                val results = orchestrator.loadModules(poiId)
-                _uiState.value = _uiState.value.copy(
-                    poiState = results.poi
-                    weatherState = results.weather
-                )
-            } catch (e: Exception)
-            {
-                ModuleState.Error(
-                    DomainFailure(
-                        code = -1,
-                        message = e.message ?: "未知错误"
-                    )
-                )
-            }
+            val results = orchestrator.loadModules(poiId,location)
+            _uiState.value = _uiState.value.copy(
+                poiState = results.poi,
+                weatherState = results.weather,
+                commentState = results.comments
+            )
         }
     }
-
 }
 
 data class LocationDetailUiState(
-    var poiState: ModuleState<PoiDetailUiState> = ModuleState.Loading,
-    var weatherState: ModuleState<WeatherUiState> = ModuleState.Loading
+    val poiState: ModuleState<PoiDetailModel> = ModuleState.Loading,
+    val weatherState: ModuleState<WeatherModel> = ModuleState.Loading,
+    val commentState:ModuleState<List<CommentModel>> = ModuleState.Loading
 )
-
-
-data class PoiDetailUiState
-    (
-    val poi: PoiDetailModel?,
-    val showPoiInfo: Boolean,
-    val poiTextLevel: PoiTextLevel,
-    val degradeReason: DegradeReason? = null
-)
-
-data class WeatherUiState
-    (
-    val weather: WeatherModel?,
-    val showWeather: Boolean,
-    val degradeReason: DegradeReason? = null
-)
-
-
