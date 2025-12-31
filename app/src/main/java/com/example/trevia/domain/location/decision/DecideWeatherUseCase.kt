@@ -17,26 +17,9 @@ class DecideWeatherUseCase @Inject constructor()
                     input.weather != null &&
                     input.networkAvailable
 
-        return if (canShowWeather)
-        {
-            WeatherDecision(
-                weather = input.weather,
-                showWeather = true,
-                degradeReason = null
-            )
-        }
-        else
-        {
-            WeatherDecision(
-                weather = null,
-                showWeather = false,
-                degradeReason = when
-                {
-                    !input.userPrefShowWeather -> null
-                    input.weather == null      -> DegradeReason.UNAVAILABLE
-                    else                       -> DegradeReason.NOT_VISIBLE
-                }
-            )
-        }
+        return WeatherDecision(
+            canShowWeather,
+            null
+        )
     }
 }

@@ -1,36 +1,26 @@
 package com.example.trevia.domain.location.decision
 
+import com.example.trevia.data.remote.amap.PoiWeatherRepository
+import com.example.trevia.domain.location.LocationDetailOrchestratorUseCase.Companion.DEFAULT_TIMEOUT_MS
 import com.example.trevia.domain.location.model.DegradeReason
 import com.example.trevia.domain.location.model.PoiDecision
 import com.example.trevia.domain.location.model.PoiInputs
+import com.example.trevia.domain.location.model.WeatherInputs
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DecidePoiDataUseCase @Inject constructor() {
+class DecidePoiDataUseCase @Inject constructor(private val poiWeatherRepository: PoiWeatherRepository) {
 
-    suspend operator fun invoke(input: PoiInputs): PoiDecision {
+    suspend operator fun invoke(poiInput: PoiInputs, weatherInput: WeatherInputs): PoiDecision {
 
-        // 页面不可见
-        if (!input.isVisible) {
-            return PoiDecision(
-                poi = null,
-                showPoiInfo = false,
-                degradeReason = DegradeReason.NOT_VISIBLE
-            )
-        }
 
-        // POI 缺失
-        if (input.poiDetail == null) {
-            return PoiDecision(
-                poi = null,
-                showPoiInfo = false,
-                degradeReason = DegradeReason.UNAVAILABLE
-            )
+        withTimeoutOrNull(DEFAULT_TIMEOUT_MS) {
+            poiWeatherRepository.getPoiWithWeather(poiId)
         }
 
         return PoiDecision(
-            poi = input.poiDetail,
             showPoiInfo = true,
             degradeReason = null
         )

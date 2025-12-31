@@ -3,7 +3,7 @@ package com.example.trevia.data.local.schedule
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "poi_weather_cache")
+@Entity(tableName = "poi_cache")
 data class PoiWeatherCache(
     @PrimaryKey val poiId: String,
     val poiTel: String,
@@ -11,6 +11,11 @@ data class PoiWeatherCache(
     val poiPostCode: String,
     val poiEmail: String,
     val poiAddress:String,
+)
+
+@Entity(tableName = "weather_cache")
+data class WeatherCache(
+    @PrimaryKey val poiId: String,
     val weather: String,
     val temperature: String,
     val windDirection: String,

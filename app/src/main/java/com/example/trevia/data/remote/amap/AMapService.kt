@@ -48,96 +48,90 @@ class AMapService(private val context: Context)
             inputTips.requestInputtipsAsyn()
         }
 
-    suspend fun getPoiById(poiId: String): PoiItem =
+    suspend fun getPoiById(poiId: String): PoiItem? =
         suspendCancellableCoroutine { cont ->
 
             val poiSearch = PoiSearch(context, null)
-            cont.invokeOnCancellation { poiSearch.setOnPoiSearchListener(null) }
+
+            cont.invokeOnCancellation {
+                poiSearch.setOnPoiSearchListener(null)
+            }
 
             poiSearch.setOnPoiSearchListener(object : PoiSearch.OnPoiSearchListener
             {
+
                 override fun onPoiItemSearched(item: PoiItem?, rCode: Int)
                 {
                     if (!cont.isActive) return
-                    if (rCode == 1000 && item != null)
+
+                    when (rCode)
                     {
-                        cont.resume(item)
-                    }
-                    else
-                    {
-                        cont.resumeWithException(Exception("高德 POI ID 检索失败，错误码: $rCode"))
+                        1000 ->
+                        {
+                            // 成功，但 item 可能为 null
+                            // null 表示：POI 不存在 / 已下架 / 无法返回
+                            cont.resume(item)
+                        }
+
+                        else ->
+                        {
+                            cont.resumeWithException(
+                                IllegalStateException(
+                                    "高德 POI ID 检索失败，错误码: $rCode"
+                                )
+                            )
+                        }
                     }
                 }
 
                 override fun onPoiSearched(result: PoiResult?, rCode: Int)
                 {
-                    // ID 检索不使用
+                    // ID 查询不使用该回调
                 }
             })
 
             poiSearch.searchPOIIdAsyn(poiId)
         }
 
-    suspend fun getLiveWeather(city: String): LocalWeatherLive =
-        suspendCancellableCoroutine { cont ->
 
-            Log.d("AMapWeather", "🌤 start getLiveWeather, city=$city")
+    suspend fun getLiveWeather(city: String): LocalWeatherLive? =
+        suspendCancellableCoroutine { cont ->
 
             val query = WeatherSearchQuery(
                 city,
                 WeatherSearchQuery.WEATHER_TYPE_LIVE
             )
 
-            Log.d(
-                "AMapWeather",
-                "WeatherSearchQuery created: city=${query.city}, type=${query.type}"
-            )
-
             val weatherSearch = WeatherSearch(context)
             weatherSearch.query = query
 
             cont.invokeOnCancellation {
-                Log.w("AMapWeather", "Coroutine cancelled, remove listener")
                 weatherSearch.setOnWeatherSearchListener(null)
             }
 
             weatherSearch.setOnWeatherSearchListener(
-                object : WeatherSearch.OnWeatherSearchListener {
+                object : WeatherSearch.OnWeatherSearchListener
+                {
 
                     override fun onWeatherLiveSearched(
                         result: LocalWeatherLiveResult?,
                         rCode: Int
-                    ) {
-                        Log.d(
-                            "AMapWeather",
-                            "onWeatherLiveSearched called, rCode=$rCode, result=$result"
-                        )
+                    )
+                    {
 
-                        if (!cont.isActive) {
-                            Log.w("AMapWeather", "Continuation not active, ignore callback")
+                        if (!cont.isActive)
+                        {
                             return
                         }
 
-                        if (rCode == 1000 && result?.liveResult != null) {
+                        if (rCode == 1000 && result?.liveResult != null)
+                        {
                             val live = result.liveResult
-                            Log.d(
-                                "AMapWeather",
-                                """
-                            🌈 Weather success:
-                            city=${live.city}
-                            weather=${live.weather}
-                            temp=${live.temperature}
-                            wind=${live.windDirection} ${live.windPower}
-                            reportTime=${live.reportTime}
-                            """.trimIndent()
-                            )
 
                             cont.resume(live)
-                        } else {
-                            Log.e(
-                                "AMapWeather",
-                                "❌ Weather failed: rCode=$rCode, liveResult=${result?.liveResult}"
-                            )
+                        }
+                        else
+                        {
 
                             cont.resumeWithException(
                                 Exception(
@@ -150,16 +144,13 @@ class AMapService(private val context: Context)
                     override fun onWeatherForecastSearched(
                         result: LocalWeatherForecastResult?,
                         rCode: Int
-                    ) {
-                        Log.d(
-                            "AMapWeather",
-                            "onWeatherForecastSearched ignored, rCode=$rCode"
-                        )
+                    )
+                    {
+                        //实时天气不使用该回调
                     }
                 }
             )
 
-            Log.d("AMapWeather", "🔍 call searchWeatherAsyn()")
             weatherSearch.searchWeatherAsyn()
         }
 

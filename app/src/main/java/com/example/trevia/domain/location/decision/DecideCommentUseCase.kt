@@ -11,17 +11,6 @@ class DecideCommentUseCase @Inject constructor()
 {
     operator fun invoke(input: CommentInputs): CommentDecision
     {
-
-        // 页面不可见，直接不展示
-        if (!input.isVisible)
-        {
-            return CommentDecision(
-                comments = null,
-                showComments = false,
-                degradeReason = DegradeReason.NOT_VISIBLE
-            )
-        }
-
         // 网络不可用 → 降级
         if (!input.networkAvailable)
         {

@@ -16,12 +16,12 @@ class PoiWeatherRepository @Inject constructor(
     private val cacheDao: PoiWeatherCacheDao
 ) {
 
-    private val cacheTimeoutMs = 1 * 60_000L // 缓存有效期 30 分钟
+    private val cacheTimeoutMs = 30 * 60_000L // 缓存有效期 30 分钟
 
     suspend fun getPoiWithWeather(poiId: String): PoiWithWeatherModel {
         val now = System.currentTimeMillis()
 
-        // 1. 尝试读取缓存
+        // 1. 尝试读取缓存（只有在缓存完整时才返回）
         val cached = cacheDao.getPoiWeather(poiId)
         if (cached != null && now - cached.lastUpdated < cacheTimeoutMs) {
             return PoiWithWeatherModel(
@@ -44,33 +44,50 @@ class PoiWeatherRepository @Inject constructor(
             )
         }
 
-        // 2. 缓存不存在或过期 → 从 API 获取
+        // 2. POI 查询（主数据）
         val poiItem = aMapService.getPoiById(poiId)
-        val city = poiItem.cityName ?: throw Exception("POI 缺少城市编码信息")
-        val weatherLive = aMapService.getLiveWeather(city)
+        if (poiItem == null) {
+            // POI 不存在：主数据缺失
+            return PoiWithWeatherModel(
+                poi = null,
+                weather = null
+            )
+        }
 
         val poiModel = poiItem.toPoiDetailModel()
-        val weatherModel = weatherLive.toWeatherModel()
 
-        // 3. 更新缓存
-        cacheDao.insertPoiWeather(
-            PoiWeatherCache(
-                poiId = poiModel.poiId,
-                poiTel = poiModel.tel,
-                poiAddress = poiModel.address,
-                poiWebsite = poiModel.website,
-                poiPostCode = poiModel.postCode,
-                poiEmail = poiModel.email,
-                weather = weatherModel.weather,
-                temperature = weatherModel.temperature,
-                windDirection = weatherModel.windDirection,
-                windPower = weatherModel.windPower,
-                humidity = weatherModel.humidity,
-                reportTime = weatherModel.reportTime,
-                lastUpdated = now
-            )
+        // 3. 天气查询（增强数据，允许为空）
+        val city = poiItem.cityName ?: return PoiWithWeatherModel(
+            poi = poiModel,
+            weather = null
         )
 
+        val weatherLive = aMapService.getLiveWeather(city)
+
+        val weatherModel = weatherLive?.toWeatherModel()
+
+        // 4. 只有在天气存在时才写缓存
+        if (weatherModel != null) {
+            cacheDao.insertPoiWeather(
+                PoiWeatherCache(
+                    poiId = poiModel.poiId,
+                    poiTel = poiModel.tel,
+                    poiAddress = poiModel.address,
+                    poiWebsite = poiModel.website,
+                    poiPostCode = poiModel.postCode,
+                    poiEmail = poiModel.email,
+                    weather = weatherModel.weather,
+                    temperature = weatherModel.temperature,
+                    windDirection = weatherModel.windDirection,
+                    windPower = weatherModel.windPower,
+                    humidity = weatherModel.humidity,
+                    reportTime = weatherModel.reportTime,
+                    lastUpdated = now
+                )
+            )
+        }
+
+        // 5. 返回结果（weather 可能为 null）
         return PoiWithWeatherModel(
             poi = poiModel,
             weather = weatherModel

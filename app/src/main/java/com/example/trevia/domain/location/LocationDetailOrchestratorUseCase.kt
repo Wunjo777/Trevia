@@ -13,14 +13,18 @@ import com.example.trevia.domain.location.decision.DecideCommentUseCase
 import com.example.trevia.domain.location.decision.DecideMediaUseCase
 import com.example.trevia.domain.location.decision.DecidePoiDataUseCase
 import com.example.trevia.domain.location.decision.DecideWeatherUseCase
+import com.example.trevia.domain.location.model.CommentDecision
 import com.example.trevia.domain.location.model.CommentInputs
 import com.example.trevia.domain.location.model.CommentModel
 import com.example.trevia.domain.location.model.DegradeReason
 import com.example.trevia.domain.location.model.DomainFailure
+import com.example.trevia.domain.location.model.MediaDecision
 import com.example.trevia.domain.location.model.MediaInputs
 import com.example.trevia.domain.location.model.MediaModel
 import com.example.trevia.domain.location.model.ModuleState
+import com.example.trevia.domain.location.model.PoiDecision
 import com.example.trevia.domain.location.model.PoiInputs
+import com.example.trevia.domain.location.model.WeatherDecision
 import com.example.trevia.domain.location.model.WeatherInputs
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -56,24 +60,47 @@ class LocationDetailOrchestratorUseCase @Inject constructor(
                 Log.e("EEE", "LocationDetailOrchestratorUseCase loadModules error", e)
                 val failure = DomainFailure(
                     code = -1,
-                    message = e.message ?: "未知错误"
+                    message = e.message ?: "未知错误",
+                    canRetry = false
+                )
+                LocationDetailModules(
+                    poi = PoiModule(
+                        moduleState = ModuleState.Error(failure),
+                        decision = null
+                    ),
+                    weather = WeatherModule(
+                        moduleState = ModuleState.Error(failure),
+                        decision = null
+                    ),
+                    comments = CommentModule(
+                        moduleState = ModuleState.Error(failure),
+                        decision = null
+                    ),
+                    media = MediaModule(
+                        moduleState = ModuleState.Error(failure),
+                        decision = null
+                    )
                 )
 
-                LocationDetailModules(
-                    poi = ModuleState.Error(failure),
-                    weather = ModuleState.Error(failure),
-                    comments = ModuleState.Error(failure)
-                )
             }
         }
 
     private suspend fun loadInternal(poiId: String, location: String): LocationDetailModules =
         supervisorScope {
-
+            //并行获取raw data
             val poiDeferred = async {
-                withTimeoutOrNull(DEFAULT_TIMEOUT_MS) {
-                    poiWeatherRepository.getPoiWithWeather(poiId)
-                }
+                val poiInputs = PoiInputs(
+                    networkAvailable = poiEnvRepository.isNetworkAvailable()
+                )
+
+                val weatherInputs = WeatherInputs(
+                    networkAvailable = poiEnvRepository.isNetworkAvailable(),
+                    userPrefShowWeather = true
+                )
+
+               val poiDecision = decidePoiDataUseCase(poiInputs,weatherInputs)
+
+
             }
 
             val commentDeferred = async {
@@ -101,91 +128,149 @@ class LocationDetailOrchestratorUseCase @Inject constructor(
             val commentRaw = commentDeferred.await()
             val mediaRaw = mediaDeferred.await()
 
-            // ⛔ POI 超时：核心模块失败，整体降级
-            if ( poiRaw == null)
-            {
-                return@supervisorScope LocationDetailModules(
-                    poi = ModuleState.Degraded(
-                        data = null,
-                        reason = DegradeReason.TIMEOUT
-                    ),
-                    weather = ModuleState.Degraded(
-                        data = null,
-                        reason = DegradeReason.TIMEOUT
-                    ),
-                    comments = ModuleState.Degraded(
-                        data = null,
-                        reason = DegradeReason.TIMEOUT
+            /* ---------- 映射为 ModuleState（事实层） ---------- */
+
+            val poiState: ModuleState<PoiDetailModel> =
+                when
+                {
+                    poiRaw == null     -> ModuleState.Error(
+                        DomainFailure(
+                            code = -2,
+                            message = "POI 数据加载超时",
+                            canRetry = true
+                        )
                     )
-                )
+
+                    poiRaw.poi == null -> ModuleState.Empty
+                    else               -> ModuleState.Success(poiRaw.poi)
+                }
+
+            val weatherState: ModuleState<WeatherModel> =
+                when
+                {
+                    poiRaw == null         ->
+                        ModuleState.Error(
+                            DomainFailure(-3, "天气依赖 POI，不可用", false)
+                        )
+
+                    poiRaw.weather == null ->
+                        ModuleState.Empty
+
+                    else                   ->
+                        ModuleState.Success(poiRaw.weather)
+                }
+
+            val commentState: ModuleState<List<CommentModel>> =
+                when
+                {
+                    commentRaw == null   ->
+                        ModuleState.Error(
+                            DomainFailure(-4, "评论加载超时", true)
+                        )
+
+                    commentRaw.isEmpty() ->
+                        ModuleState.Empty
+
+                    else                 ->
+                        ModuleState.Success(commentRaw)
+                }
+
+            val mediaState: ModuleState<MediaModel> =
+                when
+                {
+                    mediaRaw == null                                                                                                                  ->
+                        ModuleState.Error(
+                            DomainFailure(-5, "媒体加载超时", true)
+                        )
+
+                    mediaRaw.videoUrlSmall == null && mediaRaw.videoUrlMedium == null && mediaRaw.videoUrlLarge == null && mediaRaw.imgUrls.isEmpty() ->
+                        ModuleState.Empty
+
+                    else                                                                                                                              ->
+                        ModuleState.Success(mediaRaw)
+                }
+
+            var poiDecision: PoiDecision? = null
+            var weatherDecision: WeatherDecision? = null
+            var commentDecision: CommentDecision? = null
+            var mediaDecision: MediaDecision? = null
+
+            if (poiState is ModuleState.Success)
+            {
+
             }
 
-            val poiInputs = PoiInputs(
-                poiDetail = poiRaw.poi,
-                isVisible = poiEnvRepository.isVisible(),
-                networkAvailable = poiEnvRepository.isNetworkAvailable()
-            )
+            if (weatherState is ModuleState.Success)
+            {
 
-            val weatherInputs = WeatherInputs(
-                weather = poiRaw.weather,
-                isVisible = poiEnvRepository.isVisible(),
-                networkAvailable = poiEnvRepository.isNetworkAvailable(),
-                userPrefShowWeather = true
-            )
+                weatherDecision = decideWeatherUseCase(weatherInputs)
+            }
 
-            val commentInputs = CommentInputs(
-                comments = commentRaw,
-                isVisible = poiEnvRepository.isVisible(),
-                networkAvailable = poiEnvRepository.isNetworkAvailable()
-            )
+            if (commentState is ModuleState.Success)
+            {
+                val commentInputs = CommentInputs(
+                    comments = commentRaw,
+                    isVisible = poiEnvRepository.isVisible(),
+                    networkAvailable = poiEnvRepository.isNetworkAvailable()
+                )
+                commentDecision = decideCommentUseCase(commentInputs)
+            }
 
-            val mediaInputs = MediaInputs(
-                mediaData = mediaRaw,
-                isVisible = mediaEnvRepository.isVisible(),
-                networkAvailable = mediaEnvRepository.isNetworkAvailable(),
-                bandwidthKbps = mediaEnvRepository.estimateBandwidthKbps(),
-                isBatterySaverOn = mediaEnvRepository.isBatterySaverOn()
-            )
-
-            val poiDecision = decidePoiDataUseCase(poiInputs)
-            val weatherDecision = decideWeatherUseCase(weatherInputs)
-            val commentDecision = decideCommentUseCase(commentInputs)
-            val mediaDecision = decideMediaUseCase(mediaInputs)
-
+            if (mediaState is ModuleState.Success)
+            {
+                val mediaInputs = MediaInputs(
+                    mediaData = mediaRaw,
+                    isVisible = mediaEnvRepository.isVisible(),
+                    networkAvailable = mediaEnvRepository.isNetworkAvailable(),
+                    bandwidthKbps = mediaEnvRepository.estimateBandwidthKbps(),
+                    isBatterySaverOn = mediaEnvRepository.isBatterySaverOn()
+                )
+                mediaDecision = decideMediaUseCase(mediaInputs)
+            }
             return@supervisorScope LocationDetailModules(
-                poi =
-                    if (poiDecision.degradeReason == null)
-                        ModuleState.Success(poiDecision.poi!!)
-                    else
-                        ModuleState.Degraded(
-                            data = null,
-                            reason = poiDecision.degradeReason
-                        ),
-
-                weather =
-                    if (weatherDecision.degradeReason == null)
-                        ModuleState.Success(weatherDecision.weather!!)
-                    else
-                        ModuleState.Degraded(
-                            data = null,
-                            reason = weatherDecision.degradeReason
-                        ),
-
-                comments =
-                    if (commentDecision.degradeReason == null)
-                        ModuleState.Success(commentDecision.comments!!)
-                    else
-                        ModuleState.Degraded(
-                            data = null,
-                            reason = commentDecision.degradeReason
-                        )
+                poi = PoiModule(
+                    moduleState = poiState,
+                    decision = poiDecision
+                ),
+                weather = WeatherModule(
+                    moduleState = weatherState,
+                    decision = weatherDecision
+                ),
+                comments = CommentModule(
+                    moduleState = commentState,
+                    decision = commentDecision
+                ),
+                media = MediaModule(
+                    moduleState = mediaState,
+                    decision = mediaDecision
+                )
             )
         }
 }
 
-
 data class LocationDetailModules(
-    val poi: ModuleState<PoiDetailModel>,
-    val weather: ModuleState<WeatherModel>,
-    val comments: ModuleState<List<CommentModel>>
+    val poi: PoiModule,
+    val weather: WeatherModule,
+    val comments: CommentModule,
+    val media: MediaModule
+)
+
+data class PoiModule(
+    val moduleState: ModuleState<PoiDetailModel>,
+    val decision: PoiDecision?
+)
+
+data class WeatherModule(
+    val moduleState: ModuleState<WeatherModel>,
+    val decision: WeatherDecision?
+)
+
+data class CommentModule(
+    val moduleState: ModuleState<List<CommentModel>>,
+    val decision: CommentDecision?
+)
+
+data class MediaModule(
+    val moduleState: ModuleState<MediaModel>,
+    val decision: MediaDecision?
 )
