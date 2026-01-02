@@ -6,12 +6,12 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 @Dao
-interface PoiWeatherCacheDao
+interface PoiCacheDao
 {
 
-    @Query("SELECT * FROM poi_weather_cache WHERE poiId = :poiId")
-    suspend fun getPoiWeather(poiId: String): PoiWeatherCache?
+    @Query("SELECT * FROM poi_cache WHERE poiId = :poiId")
+    suspend fun getPoiCache(poiId: String): PoiCache?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPoiWeather(entity: PoiWeatherCache)
+    suspend fun insertPoiCache(entity: PoiCache)
 }

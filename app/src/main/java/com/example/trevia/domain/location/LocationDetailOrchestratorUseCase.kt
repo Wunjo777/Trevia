@@ -4,19 +4,17 @@ package com.example.trevia.domain.location
 import android.util.Log
 import com.example.trevia.data.remote.LocationMediaRepository
 import com.example.trevia.data.remote.MediaEnvRepository
-import com.example.trevia.data.remote.PoiEnvRepository
-import com.example.trevia.data.remote.amap.PoiWeatherRepository
+import com.example.trevia.data.local.LocationDetailEnvRepository
 import com.example.trevia.data.remote.leancloud.GetLocationDataRepository
 import com.example.trevia.domain.location.model.PoiDetailModel
 import com.example.trevia.domain.location.model.WeatherModel
 import com.example.trevia.domain.location.decision.DecideCommentUseCase
 import com.example.trevia.domain.location.decision.DecideMediaUseCase
-import com.example.trevia.domain.location.decision.DecidePoiDataUseCase
+import com.example.trevia.domain.location.decision.DecidePoiWeatherUseCase
 import com.example.trevia.domain.location.decision.DecideWeatherUseCase
 import com.example.trevia.domain.location.model.CommentDecision
 import com.example.trevia.domain.location.model.CommentInputs
 import com.example.trevia.domain.location.model.CommentModel
-import com.example.trevia.domain.location.model.DegradeReason
 import com.example.trevia.domain.location.model.DomainFailure
 import com.example.trevia.domain.location.model.MediaDecision
 import com.example.trevia.domain.location.model.MediaInputs
@@ -34,14 +32,13 @@ import javax.inject.Singleton
 
 @Singleton
 class LocationDetailOrchestratorUseCase @Inject constructor(
-    private val poiWeatherRepository: PoiWeatherRepository,
-    private val poiEnvRepository: PoiEnvRepository,
+    private val locationDetailEnvRepository: LocationDetailEnvRepository,
     private val getLocationDataRepository: GetLocationDataRepository,
     private val locationMediaRepository: LocationMediaRepository,
     private val mediaEnvRepository: MediaEnvRepository,
     private val decideMediaUseCase: DecideMediaUseCase,
     private val decideCommentUseCase: DecideCommentUseCase,
-    private val decidePoiDataUseCase: DecidePoiDataUseCase,
+    private val decidePoiWeatherUseCase: DecidePoiWeatherUseCase,
     private val decideWeatherUseCase: DecideWeatherUseCase
 )
 {
@@ -87,20 +84,20 @@ class LocationDetailOrchestratorUseCase @Inject constructor(
 
     private suspend fun loadInternal(poiId: String, location: String): LocationDetailModules =
         supervisorScope {
+            val isNetworkAvailable = locationDetailEnvRepository.isNetworkAvailable()
             //并行获取raw data
-            val poiDeferred = async {
+            val poiWeatherDeferred = async {
                 val poiInputs = PoiInputs(
-                    networkAvailable = poiEnvRepository.isNetworkAvailable()
+                    poiId = poiId,
+                    networkAvailable = isNetworkAvailable
                 )
 
                 val weatherInputs = WeatherInputs(
-                    networkAvailable = poiEnvRepository.isNetworkAvailable(),
-                    userPrefShowWeather = true
+                    networkAvailable = isNetworkAvailable,
+                    userPrefShowWeather = true //TODO：从datastore获取
                 )
 
-               val poiDecision = decidePoiDataUseCase(poiInputs,weatherInputs)
-
-
+               return@async decidePoiWeatherUseCase(poiInputs,weatherInputs)
             }
 
             val commentDeferred = async {
@@ -124,7 +121,9 @@ class LocationDetailOrchestratorUseCase @Inject constructor(
                 }
             }
 
-            val poiRaw = poiDeferred.await()
+            val awaitResult = poiWeatherDeferred.await()
+            val poiRaw = awaitResult.first
+            val weatherInputs = awaitResult.second
             val commentRaw = commentDeferred.await()
             val mediaRaw = mediaDeferred.await()
 
@@ -274,3 +273,5 @@ data class MediaModule(
     val moduleState: ModuleState<MediaModel>,
     val decision: MediaDecision?
 )
+
+

@@ -1,16 +1,14 @@
-package com.example.trevia.data.remote
+package com.example.trevia.data.local
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.PowerManager
-import com.example.trevia.data.remote.amap.PoiWeatherRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PoiEnvRepository @Inject constructor(
+class LocationDetailEnvRepository @Inject constructor(
     @ApplicationContext private val context: Context,
 //    private val userPrefsRepo: UserPrefsRepository // 用于读取用户偏好
 )
@@ -26,10 +24,6 @@ class PoiEnvRepository @Inject constructor(
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    // 页面是否可见
-    fun isVisible(): Boolean = true
-
     // 用户偏好：是否显示天气
 //    fun userPrefShowWeather(): Boolean = userPrefsRepo.getShowWeather()
 }
-

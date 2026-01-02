@@ -2,6 +2,7 @@ package com.example.trevia.domain.location.model
 
 data class PoiDetailModel(
     val poiId: String,
+    val cityName:String,
     val address:String,
     val tel: String,
     val website: String,

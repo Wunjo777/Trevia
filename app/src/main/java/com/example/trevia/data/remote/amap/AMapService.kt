@@ -124,11 +124,9 @@ class AMapService(private val context: Context)
                             return
                         }
 
-                        if (rCode == 1000 && result?.liveResult != null)
-                        {
-                            val live = result.liveResult
-
-                            cont.resume(live)
+                        if (rCode == 1000) {
+                            //没有天气数据返回null
+                            cont.resume(result?.liveResult)
                         }
                         else
                         {
