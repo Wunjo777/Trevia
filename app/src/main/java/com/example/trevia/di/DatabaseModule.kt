@@ -68,4 +68,9 @@ object DatabaseModule
     @Singleton
     fun provideWeatherCacheDao(db: ScheduleDatabase) =
         db.weatherCacheDao()
+
+    @Provides
+    @Singleton
+    fun provideCommentCacheDao(db: ScheduleDatabase) =
+        db.commentCacheDao()
 }

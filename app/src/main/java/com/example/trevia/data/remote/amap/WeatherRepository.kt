@@ -1,13 +1,12 @@
 package com.example.trevia.data.remote.amap
 
 import com.amap.api.services.weather.LocalWeatherLive
-import com.example.trevia.data.local.schedule.WeatherCache
-import com.example.trevia.data.local.schedule.WeatherCacheDao
+import com.example.trevia.data.local.cache.WeatherCache
+import com.example.trevia.data.local.cache.WeatherCacheDao
 import com.example.trevia.domain.location.model.WeatherModel
 import com.example.trevia.utils.toUtcMillis
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.text.compareTo
 
 @Singleton
 class WeatherRepository @Inject constructor(
@@ -27,7 +26,7 @@ class WeatherRepository @Inject constructor(
         val now = System.currentTimeMillis()
 
         val cached = weatherCacheDao.getWeatherCache(poiId) ?: return null
-        if (now - cached.reportTime > WEATHER_CACHE_TIMEOUT_MS) return null
+        if (now - cached.updatedAt > WEATHER_CACHE_TIMEOUT_MS) return null
 
         return WeatherModel(
             weather = cached.weather,
@@ -35,7 +34,7 @@ class WeatherRepository @Inject constructor(
             windDirection = cached.windDirection,
             windPower = cached.windPower,
             humidity = cached.humidity,
-            reportTime = cached.reportTime
+            updatedAt = cached.updatedAt
         )
     }
 
@@ -45,12 +44,12 @@ class WeatherRepository @Inject constructor(
         return weatherLive?.toWeatherModel()
     }
 
-    suspend fun updateWeatherCache(
+    suspend fun upsertWeatherCache(
         poiId: String,
         weatherModel: WeatherModel
     )
     {
-        weatherCacheDao.insertWeatherCache(
+        weatherCacheDao.upsertWeatherCache(
             WeatherCache(
                 poiId = poiId,
                 weather = weatherModel.weather,
@@ -58,7 +57,7 @@ class WeatherRepository @Inject constructor(
                 windDirection = weatherModel.windDirection,
                 windPower = weatherModel.windPower,
                 humidity = weatherModel.humidity,
-                reportTime = weatherModel.reportTime
+                updatedAt = weatherModel.updatedAt
             )
         )
 
@@ -70,6 +69,6 @@ class WeatherRepository @Inject constructor(
         windDirection = windDirection ?: "",
         windPower = windPower ?: "",
         humidity = humidity ?: "",
-        reportTime = reportTime?.toUtcMillis() ?: 0L
+        updatedAt = reportTime?.toUtcMillis() ?: 0L
     )
 }

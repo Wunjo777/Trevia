@@ -62,6 +62,7 @@ dependencies {
     //LeanCloud
     implementation("cn.leancloud:storage-android:8.2.28")
     implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
+    implementation(libs.androidx.ui)
     //Room
     val room_version = "2.8.3"
     implementation("androidx.room:room-runtime:$room_version")
@@ -87,6 +88,11 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     // Kotlin serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    // ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.9.0")
+    implementation("androidx.media3:media3-exoplayer-dash:1.9.0")
+    implementation("androidx.media3:media3-ui:1.9.0")
+    implementation("androidx.media3:media3-ui-compose:1.9.0")
 
     testImplementation(libs.junit)
 

@@ -1,6 +1,8 @@
 package com.example.trevia.ui.location
 
+import android.net.Uri
 import android.os.Build
+import coil3.compose.AsyncImage
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
@@ -21,29 +23,39 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.People
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import com.example.trevia.domain.location.model.CommentModel
-import com.example.trevia.domain.location.model.PoiDetailModel
-import com.example.trevia.domain.location.model.WeatherModel
+import com.example.trevia.domain.location.model.CommentsDecision
+import com.example.trevia.domain.location.model.FailureReason
+import com.example.trevia.domain.location.model.MediaDecision
 import com.example.trevia.domain.location.model.ModuleState
+import com.example.trevia.domain.location.model.PoiDecision
+import com.example.trevia.domain.location.model.PoiDetailModel
+import com.example.trevia.domain.location.model.VideoQuality
+import com.example.trevia.domain.location.model.WeatherDecision
+import com.example.trevia.domain.location.model.WeatherModel
+import com.example.trevia.ui.location.MediaContent
+import com.example.trevia.ui.utils.VideoPlayerWithLifecycle
+import androidx.core.net.toUri
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,11 +105,8 @@ fun LocationDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // 1. 视频 / 图片轮播（替换原有轮播项）
+            // 1. 多媒体内容
             item {
-                val pageCount = 5
-                val pagerState = rememberPagerState(pageCount = { pageCount })
-                val scope = rememberCoroutineScope()
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,99 +117,46 @@ fun LocationDetailScreen(
                     elevation = CardDefaults.cardElevation(10.dp)
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier.fillMaxSize()
-                        ) { page ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(if (page == 0) Color.Black else Color.DarkGray),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                // 封面/视频占位
-                                if (page == 0)
+                        when(val mediaState = uiState.mediaState)
+                        {
+                            is ModuleState.Loading -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                            is ModuleState.Success -> {
+                                MediaContent(mediaState.data)
+                            }
+                            is ModuleState.Empty -> {
+                                Text(
+                                    text = "暂无视频/图片信息",
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                            is ModuleState.Error -> {
+                                if (mediaState.failure.reason == FailureReason.NO_NETWORK)
                                 {
-                                    Icon(
-                                        Icons.Filled.PlayArrow,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(56.dp)
+                                    Text(
+                                        "暂无网络连接，请检查后重试",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.error
                                     )
                                 }
                                 else
                                 {
-                                    Text("图片 ${page + 1}", color = Color.White, fontSize = 20.sp)
+                                    val message =
+                                        if (mediaState.failure.canRetry)
+                                            "多媒体加载失败，请重试"
+                                        else
+                                            "多媒体加载失败：${mediaState.failure.message}"
+                                    Text(
+                                        message,
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
                                 }
                             }
                         }
-
-                        // 渐变覆盖，增加可读性
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp)
-                                .align(Alignment.BottomStart)
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                                        )
-                                    )
-                                )
-                        )
-
-                        // 标签（chips）
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .padding(start = 16.dp, bottom = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            val tags = listOf("人文", "自然")
-                            tags.forEach { tag ->
-                                AssistChip(
-                                    onClick = { /* filter by tag */ },
-                                    label = { Text(tag) },
-                                    shape = MaterialTheme.shapes.small,
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = MaterialTheme.colorScheme.primary.copy(
-                                            alpha = 0.12f
-                                        ),
-                                        leadingIconContentColor = MaterialTheme.colorScheme.primary
-                                    )
-                                )
-                            }
-                        }
-
-                        // 分页指示器（放大高亮）
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 8.dp)
-                        ) {
-                            repeat(pageCount) { index ->
-                                val selected = pagerState.currentPage == index
-                                val size by animateFloatAsState(targetValue = if (selected) 12f else 6f)
-                                Box(
-                                    modifier = Modifier
-                                        .size(Dp(size))
-                                        .background(
-                                            if (selected) MaterialTheme.colorScheme.primary
-                                            else MaterialTheme.colorScheme.onSurface.copy(
-                                                alpha = 0.2f
-                                            ),
-                                            shape = CircleShape
-                                        )
-                                        .padding(4.dp)
-                                )
-                                if (index < pageCount - 1) Spacer(modifier = Modifier.width(6.dp))
-                            }
-                        }
-
                         // 右下角「点击添加图片」按钮
                         Box(
                             modifier = Modifier
@@ -236,57 +192,58 @@ fun LocationDetailScreen(
                 }
             }
 
-            // 2. AI介绍（移除评分/评论，增加小字提示）
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    elevation = CardDefaults.cardElevation(6.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                Icons.Filled.Info,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text("AI介绍", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "这里是AI对该地点的介绍，结合历史、人文和景观点滴，为你呈现高质量的导览介绍与游玩建议。",
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        // 小字提示：AI 生成，仅供参考
-                        Text(
-                            "该内容为AI生成，仅供参考",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        // 快捷标签
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            val quick = listOf("摄影推荐", "亲子友好", "夜景")
-                            quick.forEach { t ->
-                                AssistChip(
-                                    onClick = { /* */ },
-                                    label = { Text(t) },
-                                    shape = MaterialTheme.shapes.small
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            //region 2. AI介绍（移除评分/评论，增加小字提示）
+//            item {
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 16.dp),
+//                    shape = MaterialTheme.shapes.medium,
+//                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+//                    elevation = CardDefaults.cardElevation(6.dp)
+//                ) {
+//                    Column(modifier = Modifier.padding(16.dp)) {
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            modifier = Modifier.fillMaxWidth()
+//                        ) {
+//                            Icon(
+//                                Icons.Filled.Info,
+//                                contentDescription = null,
+//                                tint = MaterialTheme.colorScheme.primary
+//                            )
+//                            Spacer(Modifier.width(8.dp))
+//                            Text("AI介绍", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+//                        }
+//                        Spacer(Modifier.height(8.dp))
+//                        Text(
+//                            "这里是AI对该地点的介绍，结合历史、人文和景观点滴，为你呈现高质量的导览介绍与游玩建议。",
+//                            fontSize = 15.sp,
+//                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+//                        )
+//                        Spacer(Modifier.height(6.dp))
+//                        // 小字提示：AI 生成，仅供参考
+//                        Text(
+//                            "该内容为AI生成，仅供参考",
+//                            fontSize = 12.sp,
+//                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+//                        )
+//                        Spacer(Modifier.height(12.dp))
+//                        // 快捷标签
+//                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+//                            val quick = listOf("摄影推荐", "亲子友好", "夜景")
+//                            quick.forEach { t ->
+//                                AssistChip(
+//                                    onClick = { /* */ },
+//                                    label = { Text(t) },
+//                                    shape = MaterialTheme.shapes.small
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+            //endregion
 
             // 3. 用户评价（美化每条评价）
             item {
@@ -336,8 +293,7 @@ fun LocationDetailScreen(
 
                             when (val commentState = uiState.commentState)
                             {
-
-                                is ModuleState.Loading  ->
+                                is ModuleState.Loading ->
                                 {
                                     Text(
                                         "正在加载评论…",
@@ -346,43 +302,46 @@ fun LocationDetailScreen(
                                     )
                                 }
 
-                                is ModuleState.Error    ->
+                                is ModuleState.Error   ->
                                 {
-                                    Text(
-                                        "评论加载失败：${commentState.failure.message}",
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                }
-
-                                is ModuleState.Degraded ->
-                                {
-                                    Text(
-                                        "评论暂不可用（${commentState.reason.name}）",
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                    )
-                                }
-
-                                is ModuleState.Success  ->
-                                {
-                                    val comments = commentState.data
-                                    if (comments.isEmpty())
+                                    if (commentState.failure.reason == FailureReason.NO_NETWORK)
                                     {
                                         Text(
-                                            "暂无用户评论，快来抢沙发吧～",
+                                            "暂无网络连接，请检查后重试",
                                             fontSize = 14.sp,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(
-                                                alpha = 0.6f
-                                            )
+                                            color = MaterialTheme.colorScheme.error
                                         )
                                     }
                                     else
                                     {
-                                        comments.forEach { comment ->
-                                            CommentContent(comment)
-                                        }
+                                        val message =
+                                            if (commentState.failure.canRetry)
+                                                "评论加载失败，请重试"
+                                            else
+                                                "评论加载失败：${commentState.failure.message}"
+                                        Text(
+                                            message,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
                                     }
+                                }
+
+                                is ModuleState.Empty   ->
+                                {
+                                    Text(
+                                        "暂无用户评论，快来抢沙发吧～",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.6f
+                                        )
+                                    )
+                                }
+
+                                is ModuleState.Success ->
+                                {
+                                    val commentDecision = commentState.data
+                                    CommentsContent(commentDecision)
                                 }
                             }
 
@@ -423,7 +382,7 @@ fun LocationDetailScreen(
                         }
                         Spacer(Modifier.height(8.dp))
 
-                        when (uiState.poiState)
+                        when (val poiState=uiState.poiState)
                         {
                             is ModuleState.Loading  ->
                             {
@@ -432,19 +391,33 @@ fun LocationDetailScreen(
 
                             is ModuleState.Error    ->
                             {
-                                val error = uiState.poiState as ModuleState.Error
-                                Text(
-                                    "错误码：${error.failure.code}，错误信息：${error.failure.message}",
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.error
-                                )
+                                if (poiState.failure.reason == FailureReason.NO_NETWORK)
+                                {
+                                    Text(
+                                        "暂无网络连接，请检查后重试",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                                else
+                                {
+                                    val message =
+                                        if (poiState.failure.canRetry)
+                                            "地点信息加载失败，请重试"
+                                        else
+                                            "地点信息加载失败：${poiState.failure.message}"
+                                    Text(
+                                        message,
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
 
-                            is ModuleState.Degraded ->
+                            is ModuleState.Empty ->
                             {
-                                val poiStateSnapshot = uiState.poiState as ModuleState.Degraded
                                 Text(
-                                    "景点信息暂时不可用，原因：${poiStateSnapshot.reason.name}。",
+                                    "暂无景点信息",
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                 )
@@ -452,8 +425,7 @@ fun LocationDetailScreen(
 
                             is ModuleState.Success  ->
                             {
-                                val poiStateSnapshot = uiState.poiState as ModuleState.Success
-                                PoiDetailContent(poiStateSnapshot.data)
+                                PoiDetailContent(poiState.data)
                             }
                         }
                     }
@@ -480,16 +452,32 @@ fun LocationDetailScreen(
 
                         is ModuleState.Error    ->
                         {
-                            WeatherPlaceholder(
-                                "天气加载失败：${weatherState.failure.message}"
-                            )
+                            if (weatherState.failure.reason == FailureReason.NO_NETWORK)
+                            {
+                                Text(
+                                    "暂无网络连接，请检查后重试",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            else
+                            {
+                                val message =
+                                    if (weatherState.failure.canRetry)
+                                        "天气加载失败，请重试"
+                                    else
+                                        "天气加载失败：${weatherState.failure.message}"
+                                Text(
+                                    message,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
 
-                        is ModuleState.Degraded ->
+                        is ModuleState.Empty ->
                         {
-                            WeatherPlaceholder(
-                                "天气暂不可用（${weatherState.reason.name}）"
-                            )
+                            WeatherPlaceholder("暂无天气信息")
                         }
 
                         is ModuleState.Success  ->
@@ -545,8 +533,11 @@ fun LocationDetailScreen(
 }
 
 @Composable
-fun PoiDetailContent(data: PoiDetailModel)
+fun PoiDetailContent(poiDecision: PoiDecision)
 {
+    if (!poiDecision.showPoiInfo) return
+
+    val data = poiDecision.data
     // 两列信息
     Column {
         Row(
@@ -616,8 +607,11 @@ fun PoiDetailContent(data: PoiDetailModel)
 }
 
 @Composable
-fun WeatherContent(data: WeatherModel)
+fun WeatherContent(weatherDecision: WeatherDecision)
 {
+    if (!weatherDecision.showWeather) return
+
+    val data = weatherDecision.data
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -665,7 +659,7 @@ fun WeatherContent(data: WeatherModel)
                     color = Color.White
                 )
                 Text(
-                    "更新时间 ${data.reportTime}",
+                    "更新时间 ${data.updatedAt}",
                     fontSize = 11.sp,
                     color = Color.White.copy(alpha = 0.8f)
                 )
@@ -697,59 +691,148 @@ fun WeatherPlaceholder(text: String)
 }
 
 @Composable
-fun CommentContent(comment: CommentModel)
+fun CommentsContent(commentDecision: CommentsDecision)
 {
-// ===== 单条评论 UI =====
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Box(
+    if (!commentDecision.showComments) return
+
+    commentDecision.data.forEach { comment ->
+    // ===== 单条评论 UI =====
+        Row(
             modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.2f
-                    )
-                ),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            Icon(
-                Icons.Filled.Person,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-
-            Text(
-                "游客评价",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-
-            Spacer(Modifier.height(6.dp))
-
-            Text(
-                comment.content,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(
-                    alpha = 0.9f
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(
+                            alpha = 0.2f
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
-            )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+
+                Text(
+                    "游客评价",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+
+                Spacer(Modifier.height(6.dp))
+
+                Text(
+                    comment.content,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.9f
+                    )
+                )
+            }
         }
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun LocationDetailScreenPreview()
-//{
-//    LocationDetailScreen(navigateBack = {})
-//}
+@Composable
+fun MediaContent(mediaDecision: MediaDecision) {
+
+    // 1️⃣ 决策层已经保证一致性，UI 只信 decision
+    val videosAvailable = mediaDecision.showVideo
+    val imagesAvailable = mediaDecision.showImage
+
+    if (!videosAvailable && !imagesAvailable) return
+
+    val media = mediaDecision.data
+
+    // 2️⃣ 根据 videoQuality 选择视频 URL
+    val videoUrl = remember(mediaDecision) {
+        when (mediaDecision.videoQuality) {
+            VideoQuality.SMALL -> media.videoUrlSmall
+            VideoQuality.MEDIUM -> media.videoUrlMedium
+            VideoQuality.LARGE -> media.videoUrlLarge
+            else -> null
+        }
+    }
+
+    // 3️⃣ 总页数：视频 1 页 + 图片 N 页
+    val pageCount =
+        (if (videosAvailable) 1 else 0) +
+                (if (imagesAvailable) media.imgUrls.size else 0)
+
+    val pagerState = rememberPagerState { pageCount }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+
+            when {
+                // 4️⃣ 视频页永远是第 0 页
+                videosAvailable && page == 0 -> {
+                    VideoPlayerWithLifecycle(
+                        videoUri = videoUrl!!.toUri(),
+                        autoPlay = mediaDecision.autoPlayVideo
+                    )
+                }
+
+                // 5️⃣ 图片页
+                imagesAvailable -> {
+                    val imageIndex = if (videosAvailable) page - 1 else page
+                    AsyncImage(
+                        model = media.imgUrls[imageIndex],
+                        contentDescription = "Image $imageIndex",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
+
+        // 6️⃣ 分页指示器
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(8.dp)
+        ) {
+            repeat(pageCount) { index ->
+                val selected = pagerState.currentPage == index
+                val size by animateFloatAsState(
+                    targetValue = if (selected) 12f else 6f,
+                    label = "pager_indicator"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(size.dp)
+                        .background(
+                            if (selected)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                            shape = CircleShape
+                        )
+                )
+
+                if (index < pageCount - 1) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+            }
+        }
+    }
+}

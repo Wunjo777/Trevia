@@ -14,7 +14,11 @@ import com.example.trevia.domain.location.LocationDetailOrchestratorUseCase
 import com.example.trevia.domain.location.UploadLocationCommentUseCase
 import com.example.trevia.domain.location.UploadLocationImgMetaUseCase
 import com.example.trevia.domain.location.model.CommentModel
+import com.example.trevia.domain.location.model.CommentsDecision
+import com.example.trevia.domain.location.model.MediaDecision
 import com.example.trevia.domain.location.model.ModuleState
+import com.example.trevia.domain.location.model.PoiDecision
+import com.example.trevia.domain.location.model.WeatherDecision
 import com.example.trevia.ui.navigation.LocationDetailDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,14 +103,16 @@ class LocationDetailViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 poiState = results.poi,
                 weatherState = results.weather,
-                commentState = results.comments
+                commentState = results.comments,
+                mediaState = results.media
             )
         }
     }
 }
 
 data class LocationDetailUiState(
-    val poiState: ModuleState<PoiDetailModel> = ModuleState.Loading,
-    val weatherState: ModuleState<WeatherModel> = ModuleState.Loading,
-    val commentState:ModuleState<List<CommentModel>> = ModuleState.Loading
+    val poiState: ModuleState<PoiDecision> = ModuleState.Loading,
+    val weatherState: ModuleState<WeatherDecision> = ModuleState.Loading,
+    val commentState:ModuleState<CommentsDecision> = ModuleState.Loading,
+    val mediaState: ModuleState<MediaDecision> = ModuleState.Loading
 )

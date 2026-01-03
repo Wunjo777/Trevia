@@ -1,4 +1,4 @@
-package com.example.trevia.data.local.schedule
+package com.example.trevia.data.local.cache
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -11,5 +11,5 @@ data class WeatherCache(
     val windDirection: String,
     val windPower: String,
     val humidity: String,
-    val reportTime: Long
+    val updatedAt: Long
 )

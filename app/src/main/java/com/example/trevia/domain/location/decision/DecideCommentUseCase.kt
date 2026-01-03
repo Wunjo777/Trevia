@@ -1,41 +1,61 @@
 package com.example.trevia.domain.location.decision
 
-import com.example.trevia.domain.location.model.CommentDecision
-import com.example.trevia.domain.location.model.CommentInputs
-import com.example.trevia.domain.location.model.DegradeReason
+import com.example.trevia.data.local.cache.CachePolicy.COMMENT_TIMEOUT_MS
+import com.example.trevia.data.remote.leancloud.CommentRepository
+import com.example.trevia.data.remote.leancloud.GetLocationDataRepository
+import com.example.trevia.domain.location.model.CommentsDecision
+import com.example.trevia.domain.location.model.CommentsInput
+import com.example.trevia.domain.location.model.FailureReason
+import com.example.trevia.domain.location.model.LoadResult
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DecideCommentUseCase @Inject constructor()
-{
-    operator fun invoke(input: CommentInputs): CommentDecision
-    {
-        // 网络不可用 → 降级
-        if (!input.networkAvailable)
-        {
-            return CommentDecision(
-                comments = null,
-                showComments = false,
-                degradeReason = DegradeReason.NO_NETWORK
-            )
-        }
+class DecideCommentUseCase @Inject constructor(
+    private val getLocationDataRepository: GetLocationDataRepository,
+    private val commentRepository: CommentRepository
+) {
+    suspend operator fun invoke(
+        input: CommentsInput
+    ): LoadResult<CommentsDecision> {
 
-        // 没有评论：这是正常情况！
-        if (input.comments == null)
-        {
-            return CommentDecision(
-                comments = emptyList(),
-                showComments = true,
-                degradeReason = null
+        return commentRepository.getCachedComments(input.poiId)?.let {
+            commentRepository.updateCommentsLastAccess(input.poiId)
+            LoadResult.Success(
+                CommentsDecision(
+                    data = it,
+                    showComments = true
+                )
             )
+        } ?: run {
+            if (!input.networkAvailable) {
+                LoadResult.Failure(FailureReason.NO_NETWORK)
+            } else {
+                try {
+                    val remote = withTimeout(COMMENT_TIMEOUT_MS) {
+                        getLocationDataRepository.getLocationComments(input.poiId)
+                    }
+                    when  {
+                        remote.isEmpty()  -> LoadResult.Empty
+                        else ->
+                        {
+                            commentRepository.upsertCommentsCache(input.poiId, remote)
+                            LoadResult.Success(
+                                CommentsDecision(
+                                    data = remote,
+                                    showComments = true
+                                )
+                            )
+                        }
+                    }
+                } catch (e: TimeoutCancellationException) {
+                    LoadResult.Failure(FailureReason.TIMEOUT, e)
+                } catch (e: Exception) {
+                    LoadResult.Failure(FailureReason.EXCEPTION, e)
+                }
+            }
         }
-
-        // 正常展示
-        return CommentDecision(
-            comments = input.comments,
-            showComments = true,
-            degradeReason = null
-        )
     }
 }

@@ -12,7 +12,7 @@ sealed interface ModuleState<out T>
 enum class VideoQuality
 { SMALL, MEDIUM, LARGE }
 
-data class DomainFailure(val code: Int, val message: String, val canRetry: Boolean)
+data class DomainFailure(val reason: FailureReason, val message: String, val canRetry: Boolean)
 
 data class PoiInputs(
     val poiId: String,            // POI的唯一标识符
@@ -24,18 +24,18 @@ data class WeatherInputs(
     val userPrefShowWeather: Boolean     // 用户是否允许显示天气
 )
 
-data class CommentInputs(
-    val comments: List<CommentModel>?,   // 评论信息
-    val isVisible: Boolean,              // 页面是否可见
+data class CommentsInput(
+    val poiId: String,            // POI的唯一标识符
     val networkAvailable: Boolean,       // 网络是否可用
 )
 
 data class MediaInputs(
-    val mediaData: MediaModel?,    // 媒体信息
-    val isVisible: Boolean,              // 页面是否可见
+    val poiId: String,            // POI的唯一标识符
+    val location: String,            // 位置信息
     val networkAvailable: Boolean,         // 网络是否可用
     val bandwidthKbps: Int,               // 当前网络带宽 kbps
-    val isBatterySaverOn: Boolean          // 是否开启省电模式
+    val isBatterySaverOn: Boolean,          // 是否开启省电模式
+    val userPrefAutoPlayVideo: Boolean,    // 用户是否允许自动播放视频
 )
 
 //Decision职能：告诉UI该如何显示数据
@@ -49,12 +49,15 @@ data class WeatherDecision(
     val showWeather: Boolean,
 )
 
-data class CommentDecision(
+data class CommentsDecision(
+    val data: List<CommentModel>,
     val showComments: Boolean,
 )
 
 data class MediaDecision(
-    val showMedia: Boolean,
+    val data: MediaModel,
+    val showVideo: Boolean,
+    val showImage: Boolean,
     val autoPlayVideo: Boolean = false,
     val videoQuality: VideoQuality? = null,
 )
@@ -75,5 +78,6 @@ enum class FailureReason
 {
     NO_NETWORK,
     EXCEPTION,
+    TIMEOUT,
     DEPENDENCY_UNAVAILABLE
 }

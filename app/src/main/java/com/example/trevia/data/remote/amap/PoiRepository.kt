@@ -1,13 +1,9 @@
 package com.example.trevia.data.remote.amap
 
 import com.amap.api.services.core.PoiItem
-import com.amap.api.services.weather.LocalWeatherLive
-import com.example.trevia.data.local.schedule.PoiCache
-import com.example.trevia.data.local.schedule.PoiCacheDao
-import com.example.trevia.data.local.schedule.WeatherCache
+import com.example.trevia.data.local.cache.PoiCache
+import com.example.trevia.data.local.cache.PoiCacheDao
 import com.example.trevia.domain.location.model.PoiDetailModel
-import com.example.trevia.domain.location.model.WeatherModel
-import com.example.trevia.utils.toUtcMillis
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,7 +15,7 @@ class PoiRepository @Inject constructor(
 {
     companion object
     {
-        const val POI_CACHE_TIMEOUT_MS = 24 * 60 * 60 * 1_000L // 缓存有效期 1 天
+        const val POI_CACHE_TIMEOUT_MS =7* 24 * 60 * 60 * 1_000L // 缓存有效期 7 天
     }
 
     suspend fun getCachedPoi(poiId: String): PoiDetailModel?
@@ -46,11 +42,12 @@ class PoiRepository @Inject constructor(
         return poiItem?.toPoiDetailModel()
     }
 
-    suspend fun updatePoiCache(
+    suspend fun upsertPoiCache(
         poiDetailModel: PoiDetailModel
     )
     {
-        poiCacheDao.insertPoiCache(
+        val now = System.currentTimeMillis()
+        poiCacheDao.upsertPoiCache(
             PoiCache(
                 poiId = poiDetailModel.poiId,
                 poiCityName = poiDetailModel.cityName,
@@ -59,9 +56,16 @@ class PoiRepository @Inject constructor(
                 poiPostCode = poiDetailModel.postCode,
                 poiEmail = poiDetailModel.email,
                 poiAddress = poiDetailModel.address,
-                updatedAt = System.currentTimeMillis()
+                updatedAt = now,
+                lastAccess = now
             )
         )
+    }
+
+    suspend fun updatePoiCacheLastAccess(poiId: String)
+    {
+        val now = System.currentTimeMillis()
+        poiCacheDao.updatePoiCacheLastAccess(poiId, now)
     }
 
     private fun PoiItem.toPoiDetailModel(): PoiDetailModel = PoiDetailModel(

@@ -14,7 +14,7 @@ class GetLocationDataRepository @Inject constructor(private val service: LeanClo
         return lcObjects.mapNotNull { it.getString("imageUrl") }
     }
 
-    suspend fun getLocationComment(poiId: String): List<CommentModel>
+    suspend fun getLocationComments(poiId: String): List<CommentModel>
     {
         val lcObjects: List<LCObject> = service.getLocationDataByPoiId(poiId, "LocationComment")
         return lcObjects.map { CommentModel(content = it.getString("commentText")) }

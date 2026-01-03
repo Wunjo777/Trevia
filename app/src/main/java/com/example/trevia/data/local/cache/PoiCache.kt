@@ -1,4 +1,4 @@
-package com.example.trevia.data.local.schedule
+package com.example.trevia.data.local.cache
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -12,7 +12,8 @@ data class PoiCache(
     val poiPostCode: String,
     val poiEmail: String,
     val poiAddress:String,
-    val updatedAt:Long
+    val updatedAt:Long,
+    val lastAccess:Long
 )
 
 

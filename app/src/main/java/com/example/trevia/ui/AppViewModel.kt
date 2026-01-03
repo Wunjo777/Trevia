@@ -16,18 +16,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AppViewModel @Inject constructor(
-    getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val taskScheduler: TaskScheduler
+    getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel()
 {
     companion object
     {
         const val TIMEOUT_MILLIS = 5_000L
-    }
-
-    init
-    {
-        taskScheduler.scheduleSync()
     }
 
     var isLoggedIn: StateFlow<Boolean> = getCurrentUserUseCase()

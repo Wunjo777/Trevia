@@ -1,17 +1,19 @@
 package com.example.trevia.domain.location.decision
 
+import com.example.trevia.data.local.cache.CachePolicy.POI_TIMEOUT_MS
+import com.example.trevia.data.local.cache.CachePolicy.WEATHER_TIMEOUT_MS
 import com.example.trevia.data.remote.amap.PoiRepository
 import com.example.trevia.data.remote.amap.WeatherRepository
 import com.example.trevia.domain.location.model.FailureReason
 import com.example.trevia.domain.location.model.LoadResult
 import com.example.trevia.domain.location.model.PoiDecision
-import com.example.trevia.domain.location.model.PoiDetailModel
 import com.example.trevia.domain.location.model.PoiInputs
 import com.example.trevia.domain.location.model.WeatherDecision
 import com.example.trevia.domain.location.model.WeatherInputs
-import com.example.trevia.domain.location.model.WeatherModel
+import kotlinx.coroutines.TimeoutCancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.withTimeout
 
 @Singleton
 class DecidePoiWeatherUseCase @Inject constructor(
@@ -26,6 +28,8 @@ class DecidePoiWeatherUseCase @Inject constructor(
     {
         val poiResult: LoadResult<PoiDecision> =
             poiRepository.getCachedPoi(poiInput.poiId)?.let {
+                // 更新缓存的最后访问时间
+                poiRepository.updatePoiCacheLastAccess(poiInput.poiId)
                 LoadResult.Success(
                     PoiDecision(
                         data = it,
@@ -41,17 +45,29 @@ class DecidePoiWeatherUseCase @Inject constructor(
                 {
                     try
                     {
-                        when (val remote = poiRepository.getRemotePoi(poiInput.poiId))
+                        // 明确使用 withTimeout，并区分超时与返回 null
+                        val remote = withTimeout(POI_TIMEOUT_MS) {
+                            poiRepository.getRemotePoi(poiInput.poiId)
+                        }
+                        when (remote)
                         {
                             null -> LoadResult.Empty
                             else ->
+                            {
+                                // 缓存远端数据
+                                poiRepository.upsertPoiCache(remote)
                                 LoadResult.Success(
                                     PoiDecision(
                                         data = remote,
                                         showPoiInfo = true
                                     )
                                 )
+                            }
                         }
+                    } catch (e: TimeoutCancellationException)
+                    {
+                        // 远端调用超时（映射为领域失败）
+                        LoadResult.Failure(FailureReason.TIMEOUT, e)
                     } catch (e: Exception)
                     {
                         LoadResult.Failure(FailureReason.EXCEPTION, e)
@@ -80,12 +96,13 @@ class DecidePoiWeatherUseCase @Inject constructor(
                 {
                     try
                     {
-                        when (
-                            val remote =
+                        val remote =
+                            withTimeout(WEATHER_TIMEOUT_MS) {
                                 weatherRepository.getRemoteWeather(
                                     poiResult.data.data.cityName
                                 )
-                        )
+                            }
+                        when (remote)
                         {
                             null -> LoadResult.Empty
                             else ->
@@ -96,7 +113,12 @@ class DecidePoiWeatherUseCase @Inject constructor(
                                     )
                                 )
                         }
-                    } catch (e: Exception)
+                    }catch (e: TimeoutCancellationException)
+                    {
+                        // 远端调用超时（映射为领域失败）
+                        LoadResult.Failure(FailureReason.TIMEOUT, e)
+                    }
+                    catch (e: Exception)
                     {
                         LoadResult.Failure(FailureReason.EXCEPTION, e)
                     }
