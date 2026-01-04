@@ -3,6 +3,7 @@ package com.example.trevia.ui.schedule.TripDetail
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
@@ -223,9 +224,14 @@ class TripDetailViewModel @Inject constructor(
     //endregion
 
     //region 上传图片
+    private val imageImportStartTime = MutableStateFlow<Long?>(null)
+
     @RequiresApi(Build.VERSION_CODES.Q)
     fun onImageSelected(uris: List<Uri>)
     {
+        //埋点
+        imageImportStartTime.value = SystemClock.elapsedRealtime()
+
         if (tripDetailUiState.value !is TripDetailUiState.Success) return
 
         val dayList = (tripDetailUiState.value as TripDetailUiState.Success).days.map {
@@ -249,54 +255,65 @@ class TripDetailViewModel @Inject constructor(
             }
         }
 
-        uris.forEach { uri ->
-            viewModelScope.launch(Dispatchers.IO) {
-                // ---------- 1. 文件名生成 ----------
-                val uriHash = kotlin.math.abs(uri.toString().hashCode())
-                val uuid = java.util.UUID.randomUUID().toString()
-                val baseName = "img_${uriHash}_$uuid"
+        // ---------- 分批处理 ----------
+        val batchSize = 20
+        uris.chunked(batchSize).forEachIndexed { batchIndex, batch ->
+            batch.forEach { uri ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    // ---------- 1. 文件名生成 ----------
+                    val uriHash = kotlin.math.abs(uri.toString().hashCode())
+                    val uuid = java.util.UUID.randomUUID().toString()
+                    val baseName = "img_${uriHash}_$uuid"
 //                val thumbFilename = "${baseName}_thumb.jpg"
-                val largeFilename = "${baseName}_large.jpg"
+                    val largeFilename = "${baseName}_large.jpg"
 
-                val internalFile = File(context.cacheDir, "img_${uuid}.jpg")
-                context.contentResolver.openInputStream(uri)!!.use { input ->
-                    internalFile.outputStream().use { output ->
-                        input.copyTo(output)
+                    val internalFile = File(context.cacheDir, "img_${uuid}.jpg")
+                    context.contentResolver.openInputStream(uri)!!.use { input ->
+                        internalFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
                     }
-                }
-                val internalUri=internalFile.toUri()
+                    val internalUri = internalFile.toUri()
 
-                //exif元数据解析
-                val exifData = parseExifUseCase(internalUri)
+                    //exif元数据解析
+                    val exifData = parseExifUseCase(internalUri)
 
-                //图片根据exif数据分类
-                val classifiedEventId = classifyPhotoUseCase(exifData, dayList, eventList)
+                    //图片根据exif数据分类
+                    val classifiedEventId = classifyPhotoUseCase(exifData, dayList, eventList)
 
-                // ---------- 2. 生成缩略图 ----------
+                    // ---------- 2. 生成缩略图 ----------
 //                val savedThumbUri = createSquareThumbnailUseCase(uri, 200, thumbFilename, 80)
 
-                // ---------- 3. 写入数据库（返回 photoId） ----------
-                val photoId = addPhotoUseCase(
-                    PhotoModel(
-                        tripId = _currentTripId,
-                        eventId = classifiedEventId,
-                        localOriginUri = internalUri.toString()
+                    // ---------- 3. 写入数据库（返回 photoId） ----------
+                    val photoId = addPhotoUseCase(
+                        PhotoModel(
+                            tripId = _currentTripId,
+                            eventId = classifiedEventId,
+                            localOriginUri = internalUri.toString()
+                        )
                     )
-                )
 
-                // ---------- 4. 调度创建并上传大图的 Worker （异步） ----------
-                taskScheduler.scheduleCreateAndUploadLargeImg(
-                    uri = internalUri,
-                    photoId = photoId,
-                    fileName = largeFilename,
-                    compressQuality = 80,
-                    maxSize = 1280,
-                    thumbnailSize = 200
-                )
+                    // ---------- 4. 调度创建并上传大图的 Worker （异步） ----------
+                    taskScheduler.scheduleCreateAndUploadLargeImg(
+                        uri = internalUri,
+                        photoId = photoId,
+                        fileName = largeFilename,
+                        compressQuality = 80,
+                        maxSize = 1280,
+                        thumbnailSize = 200
+                    )
+                }
             }
         }
     }
+
     //endregion
+    fun reportTTI()
+    {
+        val start = imageImportStartTime.value ?: return
+        val tti = SystemClock.elapsedRealtime() - start
+        Log.d("TTI", "Image import TTI = $tti ms")
+    }
 }
 
 sealed interface TripDetailUiState

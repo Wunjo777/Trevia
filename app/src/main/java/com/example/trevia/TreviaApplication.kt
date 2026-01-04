@@ -73,6 +73,7 @@ class TreviaApplication : Application(), Configuration.Provider {
 
     override fun getWorkManagerConfiguration(): Configuration {
         return Configuration.Builder()
+            .setMaxSchedulerLimit(20)
             .setWorkerFactory(workerFactory)
             .build()
     }

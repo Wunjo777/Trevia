@@ -2,6 +2,8 @@ package com.example.trevia.ui.location
 
 import android.net.Uri
 import android.os.Build
+import android.os.SystemClock
+import android.util.Log
 import coil3.compose.AsyncImage
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -67,7 +69,28 @@ fun LocationDetailScreen(
     navigateBack: () -> Unit
 )
 {
+    val pageLoadStartTime = remember { SystemClock.elapsedRealtime() }
+    var pageLoaded by remember { mutableStateOf(false) }
+
+
     val uiState by vm.uiState.collectAsState()
+
+
+    // 页面加载完成条件：主要模块都成功或至少不再Loading
+    val mediaLoaded = uiState.mediaState !is ModuleState.Loading
+    val poiLoaded = uiState.poiState !is ModuleState.Loading
+    val weatherLoaded = uiState.weatherState !is ModuleState.Loading
+    val commentLoaded = uiState.commentState !is ModuleState.Loading
+
+    // ② 判断页面是否加载完成
+    if (!pageLoaded && mediaLoaded && poiLoaded && weatherLoaded && commentLoaded) {
+        pageLoaded = true
+        val pageLoadEndTime = SystemClock.elapsedRealtime()
+        val tti = pageLoadEndTime - pageLoadStartTime
+        Log.d("LDTTI", "地点详情页 TTI = ${tti}ms")
+    }
+
+
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = PickMultipleVisualMedia(maxImgSelection),
     ) { uris ->

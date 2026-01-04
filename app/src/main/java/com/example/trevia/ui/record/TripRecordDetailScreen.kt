@@ -46,11 +46,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -194,6 +196,7 @@ fun TripRecordDetailScreen(
                                     index = idx
                                 )
                             },
+                            reportTTI = tripDetailViewModel::reportTTI,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .statusBarsPadding()
@@ -330,10 +333,17 @@ fun UnclassifiedPhotoContent(
     imgSelectionEnabled: Boolean,
     onEvent: (ImgSelectionEvent) -> Unit,
     onImgClick: (List<String?>, Int) -> Unit,
+    reportTTI: () -> Unit,
     modifier: Modifier = Modifier
 )
 {
-
+    //当photos从空变成非空后，等待下一帧渲染完成，并上报TTI
+    LaunchedEffect(photos.isNotEmpty()) {
+        if (photos.isNotEmpty()) {
+            withFrameNanos { }
+            reportTTI()
+        }
+    }
 
     Column(
         modifier = modifier
