@@ -56,6 +56,7 @@ import com.example.trevia.domain.location.model.WeatherModel
 import com.example.trevia.ui.location.MediaContent
 import com.example.trevia.ui.utils.VideoPlayerWithLifecycle
 import androidx.core.net.toUri
+import com.example.trevia.utils.formatMillis
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -659,7 +660,7 @@ fun WeatherContent(weatherDecision: WeatherDecision)
                     color = Color.White
                 )
                 Text(
-                    "更新时间 ${data.updatedAt}",
+                    "更新时间 ${formatMillis(data.updatedAt)}",
                     fontSize = 11.sp,
                     color = Color.White.copy(alpha = 0.8f)
                 )

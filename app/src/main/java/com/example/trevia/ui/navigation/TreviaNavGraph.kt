@@ -52,6 +52,9 @@ fun TreviaNavHost(
         composable(
             route = LocationDetailDestination.routeWithArgs,
             arguments = listOf(
+                navArgument(LocationDetailDestination.POI_ID_ARG) {
+                    type = NavType.StringType
+                },
                 navArgument(LocationDetailDestination.LOCATION_NAME_ARG) {
                     type = NavType.StringType
                 },

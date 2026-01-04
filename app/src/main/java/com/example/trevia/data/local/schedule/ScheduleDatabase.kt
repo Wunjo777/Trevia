@@ -14,7 +14,7 @@ import com.example.trevia.data.local.cache.CommentCacheDao
 
 @Singleton
 @TypeConverters(SyncStateConverter::class)
-@Database(entities = [Trip::class, Day::class, Event::class, Photo::class, PoiCache::class, WeatherCache::class, CommentCache::class], version = 17, exportSchema = false)
+@Database(entities = [Trip::class, Day::class, Event::class, Photo::class, PoiCache::class, WeatherCache::class, CommentCache::class], version = 18, exportSchema = false)
 abstract class ScheduleDatabase : RoomDatabase()
 {
     abstract fun tripDao(): TripDao

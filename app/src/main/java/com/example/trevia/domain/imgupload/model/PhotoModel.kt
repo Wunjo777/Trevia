@@ -35,5 +35,6 @@ fun PhotoModel.createNewLcObject(tripObjectId: String, eventObjectId: String? = 
     lcObject.put("event", LCObject.createWithoutData("Event", eventObjectId))
     lcObject.put("largeImgUrl", this.largeImgUrl)
     lcObject.put("thumbnailUrl", this.thumbnailUrl)
+    lcObject.put("isDeleted", false)
     return lcObject
 }

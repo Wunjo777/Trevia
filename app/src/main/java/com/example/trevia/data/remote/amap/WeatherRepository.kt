@@ -5,6 +5,9 @@ import com.example.trevia.data.local.cache.WeatherCache
 import com.example.trevia.data.local.cache.WeatherCacheDao
 import com.example.trevia.domain.location.model.WeatherModel
 import com.example.trevia.utils.toUtcMillis
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -60,15 +63,23 @@ class WeatherRepository @Inject constructor(
                 updatedAt = weatherModel.updatedAt
             )
         )
-
     }
 
-    private fun LocalWeatherLive.toWeatherModel(): WeatherModel = WeatherModel(
-        weather = weather ?: "",
-        temperature = temperature ?: "",
-        windDirection = windDirection ?: "",
-        windPower = windPower ?: "",
-        humidity = humidity ?: "",
-        updatedAt = reportTime?.toUtcMillis() ?: 0L
-    )
+    private fun LocalWeatherLive.toWeatherModel(): WeatherModel
+    {
+        val WeatherTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        return WeatherModel(
+            weather = weather ?: "",
+            temperature = temperature ?: "",
+            windDirection = windDirection ?: "",
+            windPower = windPower ?: "",
+            humidity = humidity ?: "",
+            updatedAt = reportTime?.let {
+                LocalDateTime.parse(it, WeatherTimeFormatter)
+                    .atZone(ZoneId.of("Asia/Shanghai"))
+                    .toInstant()
+                    .toEpochMilli()
+            } ?: 0L
+        )
+    }
 }

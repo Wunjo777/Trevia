@@ -32,5 +32,6 @@ fun DayModel.createNewLcObject(tripObjectId: String):LCObject
     dayLcObject.put("trip",LCObject.createWithoutData("Trip",tripObjectId))
     dayLcObject.put("date",this.date.isoLocalDateToStr())
     dayLcObject.put("indexInTrip",this.indexInTrip)
+    dayLcObject.put("isDeleted", false)
     return dayLcObject
 }

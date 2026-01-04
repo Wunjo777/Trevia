@@ -18,7 +18,7 @@ data class VideoHit(
     val tags: String,
     val duration: Int,
     @SerialName("picture_id")
-    val pictureId: String,
+    val pictureId: String? = null,
     val videos: VideoUrls
 )
 

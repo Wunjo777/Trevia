@@ -10,16 +10,3 @@ data class WeatherModel(
     val humidity: String,       // 湿度
     val updatedAt: Long      // 发布时间
 )
-
-fun WeatherModel.toWeatherCache(poiId:String,weatherModel: WeatherModel)
-{
-    WeatherCache(
-        poiId = poiId,
-        weather = weatherModel.weather,
-        temperature = weatherModel.temperature,
-        windDirection = weatherModel.windDirection,
-        windPower = weatherModel.windPower,
-        humidity = weatherModel.humidity,
-        updatedAt = weatherModel.updatedAt
-    )
-}

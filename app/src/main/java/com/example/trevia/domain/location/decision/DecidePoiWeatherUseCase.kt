@@ -1,5 +1,6 @@
 package com.example.trevia.domain.location.decision
 
+import android.util.Log
 import com.example.trevia.data.local.cache.CachePolicy.POI_TIMEOUT_MS
 import com.example.trevia.data.local.cache.CachePolicy.WEATHER_TIMEOUT_MS
 import com.example.trevia.data.remote.amap.PoiRepository
@@ -11,9 +12,9 @@ import com.example.trevia.domain.location.model.PoiInputs
 import com.example.trevia.domain.location.model.WeatherDecision
 import com.example.trevia.domain.location.model.WeatherInputs
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.withTimeout
 
 @Singleton
 class DecidePoiWeatherUseCase @Inject constructor(
@@ -106,12 +107,16 @@ class DecidePoiWeatherUseCase @Inject constructor(
                         {
                             null -> LoadResult.Empty
                             else ->
+                            {
+                                // 缓存远端数据
+                                weatherRepository.upsertWeatherCache(poiInput.poiId,remote)
                                 LoadResult.Success(
                                     WeatherDecision(
                                         data = remote,
                                         showWeather = weatherInput.userPrefShowWeather
                                     )
                                 )
+                                }
                         }
                     }catch (e: TimeoutCancellationException)
                     {
@@ -120,6 +125,7 @@ class DecidePoiWeatherUseCase @Inject constructor(
                     }
                     catch (e: Exception)
                     {
+                        Log.e("EEE", "Weather fetch error: ${e.message}")
                         LoadResult.Failure(FailureReason.EXCEPTION, e)
                     }
                 }

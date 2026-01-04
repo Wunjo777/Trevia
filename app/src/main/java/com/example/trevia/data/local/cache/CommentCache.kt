@@ -5,7 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "comment_cache")
 data class CommentCache(
-    @PrimaryKey val poiId: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val poiId: String,
     val commentContent: String,
     val updatedAt: Long,
     val lastAccess:Long

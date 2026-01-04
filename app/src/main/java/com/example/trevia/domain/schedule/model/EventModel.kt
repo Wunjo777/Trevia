@@ -48,6 +48,7 @@ fun EventModel.toLcObject(dayObjectId: String): LCObject
     else
         LCObject.createWithoutData("Event", this.lcObjectId)
     eventLcObject.put("day", LCObject.createWithoutData("Day", dayObjectId))
+    eventLcObject.put("poiId", this.poiId)
     eventLcObject.put("location", this.location)
     eventLcObject.put("address", this.address)
     eventLcObject.put("latitude", this.latitude)
@@ -55,5 +56,6 @@ fun EventModel.toLcObject(dayObjectId: String): LCObject
     eventLcObject.put("startTime", this.startTime?.toTimeString())
     eventLcObject.put("endTime", this.endTime?.toTimeString())
     eventLcObject.put("description", this.description)
+    eventLcObject.put("isDeleted", false)
     return eventLcObject
 }

@@ -1,5 +1,7 @@
 package com.example.trevia.data.remote
 
+import android.util.Log
+import kotlinx.serialization.builtins.serializer
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,6 +21,7 @@ class LocationMediaRepository @Inject constructor(private val api: PixabayApiSer
             first?.videos?.let { VideoUrlResult(it.small.url, it.medium.url, it.large.url) }
         } catch (e: Exception)
         {
+            Log.e("EEE","getFirstVideoUrl error: ${e.message}")
             null
         }
     }
@@ -32,10 +35,10 @@ class LocationMediaRepository @Inject constructor(private val api: PixabayApiSer
             response.hits.take(count).map { it.largeImageURL }
         } catch (e: Exception)
         {
+            Log.e("EEE","getFirstNImageUrls error: ${e.message}")
             emptyList()
         }
     }
-
 }
 
 data class VideoUrlResult(

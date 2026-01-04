@@ -11,7 +11,7 @@ class GetLocationDataRepository @Inject constructor(private val service: LeanClo
     suspend fun getLocationImgUrls(poiId: String): List<String>
     {
         val lcObjects: List<LCObject> = service.getLocationDataByPoiId(poiId, "LocationImageMeta")
-        return lcObjects.mapNotNull { it.getString("imageUrl") }
+        return lcObjects.mapNotNull { it.getString("imgUrl") }
     }
 
     suspend fun getLocationComments(poiId: String): List<CommentModel>

@@ -1,9 +1,10 @@
 package com.example.trevia.utils
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.Instant
 
 fun Long.toDateString(): String {
     val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
@@ -35,4 +36,11 @@ fun String.toLocalTime(): LocalTime
 {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     return LocalTime.parse(this, formatter)
+}
+
+fun formatMillis(millis: Long): String {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    return Instant.ofEpochMilli(millis)
+        .atZone(ZoneId.systemDefault())
+        .format(formatter)
 }
