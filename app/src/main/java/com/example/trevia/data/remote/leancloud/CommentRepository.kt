@@ -1,5 +1,6 @@
 package com.example.trevia.data.remote.leancloud
 
+import com.example.trevia.data.local.cache.CachePolicy.COMMENT_CACHE_TIMEOUT_MS
 import com.example.trevia.data.local.cache.CommentCache
 import com.example.trevia.data.local.cache.CommentCacheDao
 import com.example.trevia.domain.location.model.CommentModel
@@ -11,10 +12,7 @@ class CommentRepository @Inject constructor(
     private val commentCacheDao: CommentCacheDao,
 )
 {
-    companion object
-    {
-        const val COMMENT_CACHE_TIMEOUT_MS = 24 * 60 * 60 * 1_000L // 缓存有效期 24 小时
-    }
+
     suspend fun getCachedComments(poiId: String): List<CommentModel>?
     {
         val now = System.currentTimeMillis()

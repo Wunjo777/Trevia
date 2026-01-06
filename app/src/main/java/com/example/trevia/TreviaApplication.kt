@@ -6,14 +6,15 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import cn.leancloud.LeanCloud
 import com.amap.api.location.AMapLocationClient
-import com.example.trevia.data.local.cache.CachePolicy.COMMENT_TIMEOUT_MS
+import com.example.trevia.data.local.cache.CachePolicy.COMMENT_CACHE_TIMEOUT_MS
+import com.example.trevia.data.local.cache.CachePolicy.IMG_URL_CACHE_TIMEOUT_MS
 import com.example.trevia.data.local.cache.CachePolicy.MAX_COMMENT_CACHE_SIZE
 import com.example.trevia.data.local.cache.CachePolicy.MAX_POI_CACHE_SIZE
-import com.example.trevia.data.local.cache.CachePolicy.POI_TIMEOUT_MS
-import com.example.trevia.data.local.cache.CachePolicy.WEATHER_TIMEOUT_MS
+import com.example.trevia.data.local.cache.CachePolicy.POI_CACHE_TIMEOUT_MS
+import com.example.trevia.data.local.cache.CachePolicy.VIDEO_URL_CACHE_TIMEOUT_MS
+import com.example.trevia.data.local.cache.CachePolicy.WEATHER_CACHE_TIMEOUT_MS
 import com.example.trevia.utils.CacheCleaner
 import com.example.trevia.work.TaskScheduler
-import dagger.Lazy
 import dagger.hilt.android.HiltAndroidApp
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
@@ -59,9 +60,11 @@ class TreviaApplication : Application(), Configuration.Provider {
         appScope.scope.launch {
             runCatching {
                 cacheCleaner.clean(
-                    poiExpireDurationMs = POI_TIMEOUT_MS,
-                    commentExpireDurationMs = COMMENT_TIMEOUT_MS,
-                    weatherExpireDurationMs = WEATHER_TIMEOUT_MS,
+                    poiExpireDurationMs = POI_CACHE_TIMEOUT_MS,
+                    commentExpireDurationMs = COMMENT_CACHE_TIMEOUT_MS,
+                    weatherExpireDurationMs = WEATHER_CACHE_TIMEOUT_MS,
+                    videoUrlExpireDurationMs = VIDEO_URL_CACHE_TIMEOUT_MS,
+                    imgUrlExpireDurationMs = IMG_URL_CACHE_TIMEOUT_MS,
                     maxCommentSize = MAX_COMMENT_CACHE_SIZE,
                     maxPoiSize = MAX_POI_CACHE_SIZE
                 )

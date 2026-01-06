@@ -78,7 +78,7 @@ fun TripDetailScreen(
             {
                 is TripDetailUiState.Loading  ->
                 {
-                    Text("NotImplementedYet")
+                    Text("加载中......")
                 }
 
                 is TripDetailUiState.NotFound ->
@@ -177,88 +177,88 @@ fun SearchLocationBar(
 {
     val focusRequester = remember { FocusRequester() }
 
-    val tmpTipsList: List<LocationTipUiState> = listOf(
-        TipModel(
-            poiId = "BV10243488",
-            name = "市民中心(地铁站)",
-            district = "广东省深圳市福田区",
-            address = "2号线(8号线);4 号线 / 龙华线",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F300690",
-            name = "深圳市民中心",
-            district = "广东省深圳市福田区",
-            address = "福中三路(市民中心地铁站C口步行190米)",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B0FFFP097E",
-            name = "深圳市民中心C区",
-            district = "广东省深圳市福田区",
-            address = "福中三路(福田地铁站15号口步行300米)",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B0KUNCL5Q2",
-            name = "市民中心",
-            district = "广东省深圳市福田区",
-            address = "",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F38SB85",
-            name = "深圳市民政局(福中三路)",
-            district = "广东省深圳市福田区",
-            address = "深南大道深圳市民中心行政服务大厅西37米",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F300691",
-            name = "深圳市人民政府",
-            district = "广东省深圳市福田区",
-            address = "莲花街道福中社区福中三路2012号市民中心C区",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F37UFRS",
-            name = "深圳市人民政府-外事办公室",
-            district = "广东省深圳市福田区",
-            address = "深南大道深圳市民中心行政服务大厅西46-50米",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B0LRM7YD6N",
-            name = "深圳市民政局",
-            district = "广东省深圳市福田区",
-            address = "深南大道6009号",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F37UAJ1",
-            name = "深圳市人民代表大会常务委员会-信访室",
-            district = "广东省深圳市福田区",
-            address = "福中三路市政府大楼内(市民中心地铁站B口步行150米)",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState(),
-        TipModel(
-            poiId = "B02F38RWRD",
-            name = "深圳市人民政府应急管理办公室",
-            district = "广东省深圳市福田区",
-            address = "福中三路市民中心C区",
-            latitude = 0.0,
-            longitude = 0.0
-        ).toLocationTipUiState()
-    )
+//    val tmpTipsList: List<LocationTipUiState> = listOf(
+//        TipModel(
+//            poiId = "BV10243488",
+//            name = "市民中心(地铁站)",
+//            district = "广东省深圳市福田区",
+//            address = "2号线(8号线);4 号线 / 龙华线",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F300690",
+//            name = "深圳市民中心",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路(市民中心地铁站C口步行190米)",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B0FFFP097E",
+//            name = "深圳市民中心C区",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路(福田地铁站15号口步行300米)",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B0KUNCL5Q2",
+//            name = "市民中心",
+//            district = "广东省深圳市福田区",
+//            address = "",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F38SB85",
+//            name = "深圳市民政局(福中三路)",
+//            district = "广东省深圳市福田区",
+//            address = "深南大道深圳市民中心行政服务大厅西37米",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F300691",
+//            name = "深圳市人民政府",
+//            district = "广东省深圳市福田区",
+//            address = "莲花街道福中社区福中三路2012号市民中心C区",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F37UFRS",
+//            name = "深圳市人民政府-外事办公室",
+//            district = "广东省深圳市福田区",
+//            address = "深南大道深圳市民中心行政服务大厅西46-50米",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B0LRM7YD6N",
+//            name = "深圳市民政局",
+//            district = "广东省深圳市福田区",
+//            address = "深南大道6009号",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F37UAJ1",
+//            name = "深圳市人民代表大会常务委员会-信访室",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路市政府大楼内(市民中心地铁站B口步行150米)",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState(),
+//        TipModel(
+//            poiId = "B02F38RWRD",
+//            name = "深圳市人民政府应急管理办公室",
+//            district = "广东省深圳市福田区",
+//            address = "福中三路市民中心C区",
+//            latitude = 0.0,
+//            longitude = 0.0
+//        ).toLocationTipUiState()
+//    )
 
     Column(
         modifier = modifier
@@ -268,7 +268,7 @@ fun SearchLocationBar(
             .padding(16.dp)
     ) {
         LazyColumn(modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))) {
-            items(tmpTipsList, key = { it.tipId }) { tip ->
+            items(tips, key = { it.tipId }) { tip ->
                 Column(
                     modifier = Modifier
                         .padding(dimensionResource(R.dimen.padding_small))

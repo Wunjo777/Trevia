@@ -90,6 +90,6 @@ class PhotoSyncUpUseCase @Inject constructor(
             }
         }
         //所有数据上传完成后，将本地数据标记为已上传
-        photoRepository.updatePhotosWithSynced(upserts.map { it.id })
+        photoRepository.updatePhotosWithSynced(syncablePhotos.map { it.id })
     }
 }

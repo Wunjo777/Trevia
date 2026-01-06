@@ -11,10 +11,16 @@ import javax.inject.Singleton
 import com.example.trevia.data.utils.SyncStateConverter
 import com.example.trevia.data.local.cache.CommentCache
 import com.example.trevia.data.local.cache.CommentCacheDao
+import com.example.trevia.data.local.cache.VideoUrlCache
+import com.example.trevia.data.local.cache.ImgUrlCache
+import com.example.trevia.data.local.cache.VideoUrlCacheDao
+import com.example.trevia.data.local.cache.ImgUrlCacheDao
+
+
 
 @Singleton
 @TypeConverters(SyncStateConverter::class)
-@Database(entities = [Trip::class, Day::class, Event::class, Photo::class, PoiCache::class, WeatherCache::class, CommentCache::class], version = 18, exportSchema = false)
+@Database(entities = [Trip::class, Day::class, Event::class, Photo::class, PoiCache::class, WeatherCache::class, CommentCache::class, VideoUrlCache::class, ImgUrlCache::class], version = 19, exportSchema = false)
 abstract class ScheduleDatabase : RoomDatabase()
 {
     abstract fun tripDao(): TripDao
@@ -30,4 +36,7 @@ abstract class ScheduleDatabase : RoomDatabase()
     abstract fun weatherCacheDao(): WeatherCacheDao
 
     abstract fun commentCacheDao(): CommentCacheDao
+    abstract fun videoUrlCacheDao(): VideoUrlCacheDao
+
+    abstract fun imgUrlCacheDao(): ImgUrlCacheDao
 }

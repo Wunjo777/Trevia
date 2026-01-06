@@ -167,7 +167,7 @@ fun TripRecordDetailScreen(
     ) { contentPadding ->
         when (tripDetailUiState)
         {
-            is TripDetailUiState.Loading -> Text("NotImplementedYet")
+            is TripDetailUiState.Loading -> Text("加载中......")
 
             is TripDetailUiState.NotFound -> Text(stringResource(R.string.trip_not_found))
 

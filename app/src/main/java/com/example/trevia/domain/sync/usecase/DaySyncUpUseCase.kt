@@ -74,6 +74,6 @@ class DaySyncUpUseCase @Inject constructor(
             }
         }
         //所有数据上传完成后，将本地数据标记为已上传
-        dayRepository.updateDaysWithSynced(days.map { it.id })
+        dayRepository.updateDaysWithSynced(syncableDays.map { it.id })
     }
 }

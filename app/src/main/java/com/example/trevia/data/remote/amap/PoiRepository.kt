@@ -1,6 +1,7 @@
 package com.example.trevia.data.remote.amap
 
 import com.amap.api.services.core.PoiItem
+import com.example.trevia.data.local.cache.CachePolicy.POI_CACHE_TIMEOUT_MS
 import com.example.trevia.data.local.cache.PoiCache
 import com.example.trevia.data.local.cache.PoiCacheDao
 import com.example.trevia.domain.location.model.PoiDetailModel
@@ -13,11 +14,6 @@ class PoiRepository @Inject constructor(
     private val poiCacheDao: PoiCacheDao
 )
 {
-    companion object
-    {
-        const val POI_CACHE_TIMEOUT_MS =7* 24 * 60 * 60 * 1_000L // 缓存有效期 7 天
-    }
-
     suspend fun getCachedPoi(poiId: String): PoiDetailModel?
     {
         val now = System.currentTimeMillis()

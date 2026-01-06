@@ -1,6 +1,5 @@
 package com.example.trevia.domain.location.decision
 
-import com.example.trevia.data.local.cache.CachePolicy.COMMENT_TIMEOUT_MS
 import com.example.trevia.data.remote.leancloud.CommentRepository
 import com.example.trevia.data.remote.leancloud.GetLocationDataRepository
 import com.example.trevia.domain.location.model.CommentsDecision
@@ -17,6 +16,9 @@ class DecideCommentUseCase @Inject constructor(
     private val getLocationDataRepository: GetLocationDataRepository,
     private val commentRepository: CommentRepository
 ) {
+    companion object {
+        private const val DEFAULT_TIMEOUT_MS: Long = 3000
+    }
     suspend operator fun invoke(
         input: CommentsInput
     ): LoadResult<CommentsDecision> {
@@ -34,7 +36,7 @@ class DecideCommentUseCase @Inject constructor(
                 LoadResult.Failure(FailureReason.NO_NETWORK)
             } else {
                 try {
-                    val remote = withTimeout(COMMENT_TIMEOUT_MS) {
+                    val remote = withTimeout(DEFAULT_TIMEOUT_MS) {
                         getLocationDataRepository.getLocationComments(input.poiId)
                     }
                     when  {

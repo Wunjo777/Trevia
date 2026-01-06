@@ -124,8 +124,11 @@ fun LocationDetailScreen(
     }) { paddingValues ->
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+                .fillMaxSize(),
+            contentPadding = PaddingValues(
+                top = paddingValues.calculateTopPadding(),
+                bottom = 16.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 

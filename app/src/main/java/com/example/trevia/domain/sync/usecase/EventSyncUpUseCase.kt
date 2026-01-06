@@ -67,6 +67,6 @@ class EventSyncUpUseCase @Inject constructor(
             }
         }
         //所有数据上传完成后，将本地数据标记为已上传
-        eventRepository.updateEventsWithSynced(events.map { it.id })
+        eventRepository.updateEventsWithSynced(syncableEvents.map { it.id })
     }
 }

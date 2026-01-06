@@ -7,7 +7,9 @@ import javax.inject.Singleton
 class CleanCacheRepository @Inject constructor(
     private val commentCacheDao: CommentCacheDao,
     private val poiCacheDao: PoiCacheDao,
-    private val weatherCacheDao: WeatherCacheDao
+    private val weatherCacheDao: WeatherCacheDao,
+    private val videoUrlCacheDao: VideoUrlCacheDao,
+    private val imgUrlCacheDao: ImgUrlCacheDao,
 ) {
 
     /* ---------- Comment ---------- */
@@ -46,5 +48,15 @@ class CleanCacheRepository @Inject constructor(
 
     suspend fun deleteExpiredWeather(expireBefore: Long) {
         weatherCacheDao.deleteExpired(expireBefore)
+    }
+
+    /* ---------- VideoUrl ---------- */
+    suspend fun deleteExpiredVideoUrls(expireBefore: Long) {
+        videoUrlCacheDao.deleteExpired(expireBefore)
+    }
+
+     /* ---------- ImgUrl ---------- */
+    suspend fun deleteExpiredImgUrls(expireBefore: Long) {
+        imgUrlCacheDao.deleteExpired(expireBefore)
     }
 }

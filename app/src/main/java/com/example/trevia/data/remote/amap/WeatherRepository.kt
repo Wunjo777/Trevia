@@ -1,6 +1,7 @@
 package com.example.trevia.data.remote.amap
 
 import com.amap.api.services.weather.LocalWeatherLive
+import com.example.trevia.data.local.cache.CachePolicy.WEATHER_CACHE_TIMEOUT_MS
 import com.example.trevia.data.local.cache.WeatherCache
 import com.example.trevia.data.local.cache.WeatherCacheDao
 import com.example.trevia.domain.location.model.WeatherModel
@@ -17,11 +18,6 @@ class WeatherRepository @Inject constructor(
     private val weatherCacheDao: WeatherCacheDao
 )
 {
-    companion object
-    {
-        const val WEATHER_CACHE_TIMEOUT_MS = 30 * 60_000L // 缓存有效期 30 分钟
-    }
-
     suspend fun getCachedWeather(
         poiId: String
     ): WeatherModel?

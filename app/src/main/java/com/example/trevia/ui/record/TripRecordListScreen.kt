@@ -100,8 +100,7 @@ fun TimeLine(tripStartDate: String) {
             text = tripStartDate,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 4.dp),
-            maxLines = 1
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }

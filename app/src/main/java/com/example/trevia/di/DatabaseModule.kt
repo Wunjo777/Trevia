@@ -73,4 +73,14 @@ object DatabaseModule
     @Singleton
     fun provideCommentCacheDao(db: ScheduleDatabase) =
         db.commentCacheDao()
+
+     @Provides
+    @Singleton
+    fun provideVideoUrlCacheDao(db: ScheduleDatabase) =
+        db.videoUrlCacheDao()
+
+    @Provides
+    @Singleton
+    fun provideImgUrlCacheDao(db: ScheduleDatabase) =
+        db.imgUrlCacheDao()
 }

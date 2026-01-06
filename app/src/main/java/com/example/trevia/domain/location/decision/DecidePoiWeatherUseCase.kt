@@ -1,8 +1,6 @@
 package com.example.trevia.domain.location.decision
 
 import android.util.Log
-import com.example.trevia.data.local.cache.CachePolicy.POI_TIMEOUT_MS
-import com.example.trevia.data.local.cache.CachePolicy.WEATHER_TIMEOUT_MS
 import com.example.trevia.data.remote.amap.PoiRepository
 import com.example.trevia.data.remote.amap.WeatherRepository
 import com.example.trevia.domain.location.model.FailureReason
@@ -22,6 +20,9 @@ class DecidePoiWeatherUseCase @Inject constructor(
     private val weatherRepository: WeatherRepository
 )
 {
+    companion object {
+        private const val DEFAULT_TIMEOUT_MS: Long = 3000
+    }
     suspend operator fun invoke(
         poiInput: PoiInputs,
         weatherInput: WeatherInputs
@@ -47,7 +48,7 @@ class DecidePoiWeatherUseCase @Inject constructor(
                     try
                     {
                         // 明确使用 withTimeout，并区分超时与返回 null
-                        val remote = withTimeout(POI_TIMEOUT_MS) {
+                        val remote = withTimeout(DEFAULT_TIMEOUT_MS) {
                             poiRepository.getRemotePoi(poiInput.poiId)
                         }
                         when (remote)
@@ -98,7 +99,7 @@ class DecidePoiWeatherUseCase @Inject constructor(
                     try
                     {
                         val remote =
-                            withTimeout(WEATHER_TIMEOUT_MS) {
+                            withTimeout(DEFAULT_TIMEOUT_MS) {
                                 weatherRepository.getRemoteWeather(
                                     poiResult.data.data.cityName
                                 )

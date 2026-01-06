@@ -12,6 +12,8 @@ class CacheCleaner @Inject constructor(
         poiExpireDurationMs: Long,
         commentExpireDurationMs: Long,
         weatherExpireDurationMs: Long,
+        videoUrlExpireDurationMs: Long,
+        imgUrlExpireDurationMs: Long,
         maxCommentSize: Int,
         maxPoiSize: Int,
     ) {
@@ -19,11 +21,15 @@ class CacheCleaner @Inject constructor(
         val commentExpireBefore = now - commentExpireDurationMs
         val poiExpireBefore = now - poiExpireDurationMs
         val weatherExpireBefore = now - weatherExpireDurationMs
+        val videoUrlExpireBefore = now - videoUrlExpireDurationMs
+        val imgUrlExpireBefore = now - imgUrlExpireDurationMs
 
         // 1️⃣ 先清理过期缓存（强规则）
         repository.deleteExpiredComments(commentExpireBefore)
         repository.deleteExpiredPois(poiExpireBefore)
         repository.deleteExpiredWeather(weatherExpireBefore)
+        repository.deleteExpiredVideoUrls(videoUrlExpireBefore)
+        repository.deleteExpiredImgUrls(imgUrlExpireBefore)
 
         // 2️⃣ 再按 LRU 清理超量缓存（兜底规则）
         cleanBySize(

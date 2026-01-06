@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -91,7 +92,7 @@ private fun TripListContent(
         if (tripList.isEmpty())
         {
             Text(
-                text = "NotImplementedYet",
+                text = "没有行程，点击右下角按钮创建一个吧！",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(contentPadding),
@@ -182,6 +183,7 @@ private fun TripItem(
                         text = tripItem.tripLocation,
                         style = MaterialTheme.typography.titleMedium
                     )
+                    Spacer(Modifier.height(4.dp))
                     Text(
                         text = tripItem.tripDateRange + ", " + stringResource(
                             R.string.trip_days_count,
@@ -189,7 +191,6 @@ private fun TripItem(
                             tripItem.tripDaysCount - 1
                         ), style = MaterialTheme.typography.bodyMedium
                     )
-                    Text(text = "NotImplementedYet", style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
