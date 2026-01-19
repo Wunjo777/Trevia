@@ -125,7 +125,15 @@ fun EventItem(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onLocationClick(event.poiId,event.location,event.address,event.latitude,event.longitude) } // 点击 location 和 address 的区域
+                    .clickable {
+                        onLocationClick(
+                            event.poiId,
+                            event.location,
+                            event.address,
+                            event.latitude,
+                            event.longitude
+                        )
+                    } // 点击 location 和 address 的区域
             ) {
                 Text(event.location, style = MaterialTheme.typography.titleMedium)
                 Text(event.address, style = MaterialTheme.typography.bodyMedium)

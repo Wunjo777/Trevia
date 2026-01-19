@@ -144,6 +144,9 @@ fun ZoomableImage(
     val minScale = 1f
     val maxScale = 5f
 
+    // scrollEnabled 用来控制父组件是否可以滑动
+    val scrollEnabled = remember { mutableStateOf(true) }
+
     Box(
         modifier = modifier.tapAndGesture(onTap = { onSingleTap() }, onDoubleTap = {
             // toggle between 1f and 2.75f (or maxScale)
@@ -156,7 +159,7 @@ fun ZoomableImage(
             scale = newScale
             // apply pan scaled by current scale (simple)
             if (newScale > 1.0f) offset += pan
-        }, scrollEnabled = remember { mutableStateOf(true) })
+        }, scrollEnabled = scrollEnabled)
     ) {
         // Use Coil's AsyncImage; swap to your loader if needed.
         AsyncImage(
@@ -176,6 +179,10 @@ fun ZoomableImage(
                     scaleY = scale
                 }
         )
+    }
+
+    LaunchedEffect(scale) {
+        scrollEnabled.value = scale <= 1f
     }
 
     // When fully unzoomed restore offset (small debounce)

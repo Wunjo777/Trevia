@@ -55,7 +55,7 @@ enum class PointerRequisite
  */
 suspend fun PointerInputScope.detectTransformGestures(
     panZoomLock: Boolean = false,
-    consume: Boolean = true,
+    consume: Boolean = false,
     pass: PointerEventPass = PointerEventPass.Main,
     onGestureStart: (PointerInputChange) -> Unit = {},
     onGesture: (
@@ -69,12 +69,14 @@ suspend fun PointerInputScope.detectTransformGestures(
     onGestureEnd: (PointerInputChange) -> Unit = {}
 )
 {
+    //awaitEachGesture 用来循环处理一个个完整的手势；
+    //block 里写的是如何处理某一次手势内部的所有触摸事件。
     awaitEachGesture {
         var rotation = 0f
         var zoom = 1f
         var pan = Offset.Zero
         var pastTouchSlop = false
-        val touchSlop = viewConfiguration.touchSlop
+        val touchSlop = viewConfiguration.touchSlop//手指在屏幕上移动的距离（像素），只要没超过这个值，就仍然被认为是“静止点击”；一旦超过，就认为用户在“滚动 / 拖拽”。
         var lockedToPanZoom = false
 
         // Wait for at least one pointer to press down, and set first contact position
